@@ -1,0 +1,5 @@
+VERSION=1.4.1
+PROJECT_PATH=./navhack
+PACKAGE=info.navhack
+ACTIVITY=NavHack
+TARGET=2
