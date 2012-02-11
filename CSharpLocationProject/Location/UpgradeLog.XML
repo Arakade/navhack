@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="Location">
+</Property><Property Name="Solution File" Value="C:\RNIB Hack\Location\Location.sln">
+</Property><Property Name="User Options File" Value="C:\RNIB Hack\Location\Location.suo">
+</Property><Property Name="Date" Value="11 February 2012">
+</Property><Property Name="Time" Value="16:23">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="Location.sln" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location.sln">
+</Event><Event ErrorLevel="0" Project="" Source="Location.suo" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location.suo">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Location.csproj" Description="Project file successfully backed up as C:\RNIB Hack\Location\Backup\Location\Location.csproj">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Location.csproj.user" Description="Project user file successfully backed up as C:\RNIB Hack\Location\Backup\Location\Location.csproj.user">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\DistanceAlgorithm.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\DistanceAlgorithm.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form1.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form1.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form1.Designer.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form1.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form2.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form2.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form2.Designer.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form2.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form3.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form3.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form3.Designer.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form3.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\HttpWebResponseWorker.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\HttpWebResponseWorker.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Program.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Program.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Properties\AssemblyInfo.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Properties\Resources.Designer.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Properties\Resources.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Properties\Settings.Designer.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Properties\Settings.Designer.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\SortingListBox.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\SortingListBox.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Talker.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Talker.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\XMLFragmentStream.cs" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\XMLFragmentStream.cs">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\map.xsc" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\map.xsc">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\map.xss" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\map.xss">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Properties\Settings.settings" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Properties\Settings.settings">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form1.resx" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form1.resx">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form2.resx" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form2.resx">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Form3.resx" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Form3.resx">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Properties\Resources.resx" Description="File successfully backed up as C:\RNIB Hack\Location\Backup\Location\Properties\Resources.resx">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Location.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="Location" Source="Location\Location.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="Location.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="Location.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="Location" Source="Location\Location.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>
