@@ -1,3 +1,5 @@
+var lat, lon, prevLat, prevLon, address, lastSpoke;
+
 var deviceInfo = function() {
 	var ttsLoaded = function(ret) {
 		// alert("tts loaded: "+ ret);
@@ -8,6 +10,9 @@ var deviceInfo = function() {
 	}
 
 	window.plugins.tts.startup(ttsLoaded, ttsLoadFailed);
+
+var gpsOptions = { enableHighAccuracy:true};
+navigator.geolocation.watchPosition(gotGps,                                                  gpsError, gpsOptions);
 };
 
 var getLocation = function() {
@@ -159,4 +164,24 @@ function init() {
     // doesn't have a scroll button
     // document.addEventListener("touchmove", preventBehavior, false);
     document.addEventListener("deviceready", deviceInfo, true);
+}
+
+function gpsError(x) {
+    	alert("location failed: "+ ex);
+}
+
+function gotGps(p) {
+lat=p.coords.latitude;
+lon=p.coords.longitude;
+var gpsTime = new Date(p.timestamp);
+// If >10secs has elapsed since the last speech:
+if (lastSpoke && (gpsTime - lastSpoke >= 10000)) {
+var distance = GeoCodeCalc.CalcDistance(prevLat, prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
+if (distance > 0.05) {
+var url = "http://nominatim.openstreetmap.org/reverse?lat="+lat+"&lon="+lon+"&format=json";
+$.getJSON(url, function(data) {
+alert(data);
+});
+}
+}
 }
