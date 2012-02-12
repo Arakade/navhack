@@ -7,11 +7,11 @@
             var results = new Array();
             results.push(new module.PointOfInterest(new module.GeoCoord(12.10101, 78.565), "some location"));
             callback.call(this, results);
-        }
+        };
 
         this.getCurrentLocation = function(location){
             return "Goswell Road";
-        }
+        };
     };
 
     module.PointOfInterest = function(coordinate, name){
