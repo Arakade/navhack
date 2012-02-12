@@ -1,4 +1,9 @@
-var lat, lon, prevLat, prevLon, address, lastSpoke;
+var lat = 0,
+	lon = 0,
+	prevLat = 0,
+	prevLon = 0,
+	address = 0,
+	lastSpoke = new Date();
 
 var deviceInfo = function() {
 	var ttsLoaded = function(ret) {
@@ -12,7 +17,7 @@ var deviceInfo = function() {
 	window.plugins.tts.startup(ttsLoaded, ttsLoadFailed);
 
 var gpsOptions = { enableHighAccuracy:true};
-navigator.geolocation.watchPosition(gotGps,                                                  gpsError, gpsOptions);
+navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
 };
 
 var getLocation = function() {
@@ -164,24 +169,46 @@ function init() {
     // doesn't have a scroll button
     // document.addEventListener("touchmove", preventBehavior, false);
     document.addEventListener("deviceready", deviceInfo, true);
+    console.log("init done");
 }
 
-function gpsError(x) {
-    	alert("location failed: "+ ex);
+function gpsError(ex) {
+    alert("location failed: "+ ex);
 }
 
 function gotGps(p) {
-lat=p.coords.latitude;
-lon=p.coords.longitude;
-var gpsTime = new Date(p.timestamp);
-// If >10secs has elapsed since the last speech:
-if (lastSpoke && (gpsTime - lastSpoke >= 10000)) {
-var distance = GeoCodeCalc.CalcDistance(prevLat, prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
-if (distance > 0.05) {
-var url = "http://nominatim.openstreetmap.org/reverse?lat="+lat+"&lon="+lon+"&format=json";
-$.getJSON(url, function(data) {
-alert(data);
-});
-}
-}
+	console.log("gotGps: "+ p);
+	prevLat = 0;
+	prevLon = 0;
+	lat=p.coords.latitude;
+	lon=p.coords.longitude;
+	var gpsTime = new Date(p.timestamp);
+
+	// If >10secs has elapsed since the last speech:
+	var deltaT = gpsTime - lastSpoke;
+	console.log("gpsTime: "+ gpsTime +", deltaT: "+ deltaT);
+	if (deltaT >= 10000) {
+		var distance = GeoCodeCalc.CalcDistance(prevLat, prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
+		console.log("distance: "+ distance);
+		if (distance > 0.05) {
+			var url = "http://nominatim.openstreetmap.org/reverse?lat="+lat+"&lon="+lon+"&format=json";
+			$.getJSON(url, function(data) {
+				console.log("jsonData: "+ data);
+				var displayName = data.display_name;
+				window.plugins.tts.speak(display_name, ttsSuccess, ttsFailed);
+				prevLat = lat;
+				prevLon = lon;
+				lastSpoke = gpsTime;
+				alert(data);
+			}, function(err) {
+				console.log("jsonFail: "+ err);
+			});
+			lastSpoke = gpsTime;
+			console.log("queried at "+ gpsTime);
+		} else {
+			console.log("not moved far enough");
+		}
+	} else {
+		console.log("not been long enough");
+	}
 }

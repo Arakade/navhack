@@ -36,6 +36,30 @@
         return distance;
     }
 
+    module.Lat = function(node) {
+                return parseFloat($(node).attr("lat"));
+            };
+
+    module.Lon = function (node) {
+                return parseFloat($(node).attr("lon"));
+            };
+
+    module.Angle = function (element1, element2)
+    {
+        var lat1 = module.Lat(element1);
+        var lon1 = module.Lon(element1);
+        var lat2 = module.Lat(element2);
+        var lon2 = module.Lon(element2);
+
+        var x = lon1 - lon2;
+        var y = lat1 - lat2;
+
+        var a = 90 + -180 / Math.PI * Math.atan2(x, y);
+        if (a < 0)
+            a += 360;
+        return a;
+    }
+
     exports.rnib = exports.rnib || {};
 
     exports.rnib.distances = module;

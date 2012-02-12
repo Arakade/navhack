@@ -17,14 +17,6 @@
 
     var fileXml;
 
-    module.Lat = function(node) {
-                return parseFloat($(node).attr("lat"));
-            };
-
-    module.Lon = function (node) {
-                return parseFloat($(node).attr("lon"));
-            };
-
     module.Tags = function (element) {
 
                     var dict = {};
@@ -67,8 +59,8 @@
                 .find("node");
 
         nodes.each(function(i, n){
-            var lat2 = module.Lat(n);
-            var lon2 = module.Lon(n);
+            var lat2 = rnib.distances.Lat(n);
+            var lon2 = rnib.distances.Lon(n);
             var dx = (lat1 - lat2);
             var dy = (lon1 - lon2);
             var ds = dx * dx + dy * dy;
@@ -78,22 +70,6 @@
                 node = n;
             }
         });
-
-        module.Angle (element1, element2)
-                {
-                    var lat1 = module.Lat(element1);
-                    var lon1 = module.Lon(element1);
-                    var lat2 = module.Lat(element2);
-                    var lon2 = module.Lon(element2);
-
-                    var x = lon1 - lon2;
-                    var y = lat1 - lat2;
-
-                    var a = 90 + -180 / Math.PI * Math.atan2(x, y);
-                                if (a < 0)
-                                    a += 360;
-                                return a;
-                }
 
         module.findWays($(node));
 
