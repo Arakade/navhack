@@ -3,10 +3,10 @@
 
     module.PointsOfInterestFinder = function(){
 
-        this.getPointsOfInterest = function(location, radiusOfInterest){
+        this.getPointsOfInterest = function(location, radiusOfInterest, callback){
             var results = new Array();
             results.push(new module.PointOfInterest(new module.GeoCoord(12.10101, 78.565), "some location"));
-            return results;
+            callback.call(this, results);
         }
 
         this.getCurrentLocation = function(location){
