@@ -4,6 +4,7 @@ var lat = 0,
 	prevLon = 0,
 	address = 0,
 	lastSpoke = new Date();
+var latitudes, longitudes, lli;
 
 var deviceInfo = function() {
 	var ttsLoaded = function(ret) {
@@ -17,7 +18,15 @@ var deviceInfo = function() {
 	window.plugins.tts.startup(ttsLoaded, ttsLoadFailed);
 
 var gpsOptions = { enableHighAccuracy:true};
-navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
+//navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
+latitudes=new Array();
+longitudes=new Array();
+lli=0;
+latitudes.push(52); longitudes.push(0);
+latitudes.push(52.1); longitudes.push(0.1);
+latitudes.push(52.2); longitudes.push(0.2);
+
+$("#MainPage").on("tap", onTap);
 };
 
 var getLocation = function() {
@@ -161,7 +170,7 @@ function sayHi() {
 		alert("speech failed: "+ ret);
 	}
 
-	window.plugins.tts.speak("The TTS service is ready", ttsSuccess, ttsFailed);
+	window.plugins.tts.speak("Hello to all at the Londroid RNIB Hackathon", ttsSuccess, ttsFailed);
 }
 
 function init() {
@@ -211,4 +220,19 @@ function gotGps(p) {
 	} else {
 		console.log("not been long enough");
 	}
+}
+
+function onTap(e) {
+if (lli >= latitudes.length){
+	window.plugins.tts.speak("At end of route", ttsSuccess, ttsFailed);
+} else {
+var latitude = latitudes[lli];
+var longitude = lli[longitudes];
+lli++;
+			var url = "http://nominatim.openstreetmap.org/reverse?lat="+latitude+"&lon="+longitude+"&format=json";
+			$.getJSON(url, function(data) {
+				var displayName = data.display_name;
+				window.plugins.tts.speak(display_name, ttsSuccess, ttsFailed);
+			});
+}
 }
