@@ -6,9 +6,12 @@ var lat = 0,
 	lastSpoke = new Date();
 var latitudes, longitudes, lli;
 
+var saidHi = false;
+
 var deviceInfo = function() {
 	var ttsLoaded = function(ret) {
 		// alert("tts loaded: "+ ret);
+		sayHi();
 	}
 
 	var ttsLoadFailed = function(ret) {
@@ -160,17 +163,21 @@ function toggleCompass() {
     }
 }
 
+var ttsSuccess = function(ret) {
+	console.log("speech worked: "+ ret);
+}
+
+var ttsFailed = function(ret) {
+	console.log("speech failed: "+ ret);
+	alert("speech failed: "+ ret);
+}
+
 function sayHi() {
-
-	var ttsSuccess = function(ret) {
-		// alert("speech worked: "+ ret);
+	if (saidHi) {
+		return;
 	}
-
-	var ttsFailed = function(ret) {
-		alert("speech failed: "+ ret);
-	}
-
-	window.plugins.tts.speak("Hello to all at the Londroid RNIB Hackathon", ttsSuccess, ttsFailed);
+	window.plugins.tts.speak("Hello to all at the Londroid R N I B Hack-a-thon", ttsSuccess, ttsFailed);
+	saidHi = true;
 }
 
 function init() {
@@ -232,7 +239,7 @@ lli++;
 			var url = "http://nominatim.openstreetmap.org/reverse?lat="+latitude+"&lon="+longitude+"&format=json";
 			$.getJSON(url, function(data) {
 				var displayName = data.display_name;
-				window.plugins.tts.speak(display_name, ttsSuccess, ttsFailed);
+				window.plugins.tts.speak(displayName, ttsSuccess, ttsFailed);
 			});
 }
 }

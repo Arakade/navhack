@@ -152,7 +152,7 @@
 
             var index = -1;
 
-            var ways = module.WaysFromNode(node)
+            var ways = module.WaysFromNode(node);
 
             for (var w in ways)
             {
