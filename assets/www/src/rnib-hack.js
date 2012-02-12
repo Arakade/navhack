@@ -1,4 +1,4 @@
-(function(exports){
+(function(exports, mapData){
     var module = {};
 
     module.PointsOfInterestFinder = function(){
@@ -64,4 +64,4 @@
 
     exports.rnib = exports.rnib || {};
     exports.rnib.poi = module;
-})(this);
+})(this, rnib.mapData);
