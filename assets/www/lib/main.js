@@ -25,9 +25,19 @@ var gpsOptions = { enableHighAccuracy:true};
 latitudes=new Array();
 longitudes=new Array();
 lli=0;
-latitudes.push(52); longitudes.push(0);
-latitudes.push(52.1); longitudes.push(0.1);
-latitudes.push(52.2); longitudes.push(0.2);
+latitudes.push(51.5241419); longitudes.push(-0.0989169);
+latitudes.push(51.5241521); longitudes.push(-0.0989377);
+latitudes.push(51.5241982); longitudes.push(-0.0989615);
+latitudes.push(51.5242067); longitudes.push(-0.0989370);
+latitudes.push(51.5242152); longitudes.push(-0.0986890);
+latitudes.push(51.5242532); longitudes.push(-0.0987932);
+latitudes.push(51.5242601); longitudes.push(-0.0987955);
+latitudes.push(51.5242765); longitudes.push(-0.0987343);
+latitudes.push(51.5259560); longitudes.push(-0.0997050);
+latitudes.push(51.5259873); longitudes.push(-0.0995799);
+latitudes.push(51.5259954); longitudes.push(-0.0995397);
+latitudes.push(51.5260003); longitudes.push(-0.0997208);
+latitudes.push(51.5260271); longitudes.push(-0.0995512);
 
 $("#MainPage").on("tap", onTap);
 };
@@ -211,7 +221,8 @@ function gotGps(p) {
 			$.getJSON(url, function(data) {
 				console.log("jsonData: "+ data);
 				var displayName = data.display_name;
-				window.plugins.tts.speak(display_name, ttsSuccess, ttsFailed);
+var displayNameStart = displayName.split(",")[0];
+				window.plugins.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 				prevLat = lat;
 				prevLon = lon;
 				lastSpoke = gpsTime;
@@ -239,7 +250,8 @@ lli++;
 			var url = "http://nominatim.openstreetmap.org/reverse?lat="+latitude+"&lon="+longitude+"&format=json";
 			$.getJSON(url, function(data) {
 				var displayName = data.display_name;
-				window.plugins.tts.speak(displayName, ttsSuccess, ttsFailed);
+var displayNameStart = displayName.split(",")[0];
+				window.plugins.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 			});
 }
 }
