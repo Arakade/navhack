@@ -11,13 +11,12 @@ describe("Points of interest finder", function () {
         server.respondWith(response);
 
         pOfIFinder = new rnib.poi.PointsOfInterestFinder();
-
-
     });
 
     describe("retrieving points of interest", function () {
         it("should return an array with the points of interest in it", function () {
             var results,
+                result,
                 callback = function(result){ results = result; },
                 expectedPOI = new rnib.poi.PointOfInterest(new rnib.poi.GeoCoord(12.10101, 78.565), "some location");
 
@@ -25,7 +24,11 @@ describe("Points of interest finder", function () {
 
             server.respond();
 
-            expect(results).toContain(expectedPOI);
+            result = results[0];
+
+            expect(result.coord.lat).toBe(expectedPOI.coord.lat);
+            expect(result.coord.lon).toBe(expectedPOI.coord.lon);
+            expect(result.name).toBe(expectedPOI.name);
         });
     });
 

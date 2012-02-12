@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CGImap 0.0.2">
+ <bounds minlat="51.5182000" minlon="-0.1186000" maxlat="51.5395000" maxlon="-0.0842000"/>
+ <node id="593342245" lat="51.5233980" lon="-0.0985620" user="dankarran" uid="1185" visible="true" version="1" changeset="3385472" timestamp="2009-12-16T10:02:03Z">
+  <tag k="amenity" v="telephone"/>
+ </node>
+    <node id="108417" lat="51.5233140" lon="-0.0985343" user="Harry Wood" uid="1611" visible="true" version="7" changeset="7118449" timestamp="2011-01-28T23:52:05Z">
+     <tag k="highway" v="traffic_signals"/>
+    </node>
+ <node id="108396" lat="51.5225117" lon="-0.1020633" user="Paul The Archivist" uid="82783" visible="true" version="4" changeset="10480462" timestamp="2012-01-23T23:48:12Z">
+  <tag k="highway" v="traffic_signals"/>
+ </node>
+ <node id="1125593815" lat="51.5231496" lon="-0.0986069" user="Harry Wood" uid="1611" visible="true" version="1" changeset="7118449" timestamp="2011-01-28T23:51:45Z"/>
+ <node id="198386" lat="51.5297439" lon="-0.1024758" user="Kachkaev" uid="231451" visible="true" version="4" changeset="8547664" timestamp="2011-06-25T23:29:44Z">
+  <tag k="highway" v="traffic_signals"/>
+ </node>
+ <node id="108409" lat="51.5215697" lon="-0.0973101" user="Harry Wood" uid="1611" visible="true" version="3" changeset="7118528" timestamp="2011-01-29T00:11:06Z"/>
+ <way id="47009721" user="Paul The Archivist" uid="82783" visible="true" version="4" changeset="10480682" timestamp="2012-01-24T00:46:12Z">
+  <nd ref="108396"/>
+  <nd ref="108417"/>
+  <tag k="abutters" v="commercial"/>
+  <tag k="cycleway" v="lane"/>
+  <tag k="highway" v="primary"/>
+  <tag k="maxspeed" v="30mph"/>
+  <tag k="name" v="Clerkenwell Road"/>
+  <tag k="ref" v="A5201"/>
+ </way>
+  <way id="97175531" user="Harry Wood" uid="1611" visible="true" version="1" changeset="7118449" timestamp="2011-01-28T23:51:58Z">
+  <nd ref="108417"/>
+  <nd ref="1125593815"/>
+  <tag k="highway" v="unclassified"/>
+  <tag k="name" v="Charterhouse Buildings"/>
+  <tag k="not:name" v="Charterhouse Bldgs"/>
+ </way>
+ <way id="10879272" user="Paul The Archivist" uid="82783" visible="true" version="12" changeset="10624843" timestamp="2012-02-08T14:05:01Z">
+  <nd ref="198386"/>
+  <nd ref="108417"/>
+  <tag k="highway" v="primary"/>
+  <tag k="maxspeed" v="30mph"/>
+  <tag k="maxweight" v="18T"/>
+  <tag k="name" v="Goswell Road"/>
+  <tag k="note" v="Maxweight 18T applies to goods vehicles"/>
+  <tag k="ref" v="A1"/>
+  <tag k="width" v="13"/>
+ </way>
+ <way id="47009721" user="Paul The Archivist" uid="82783" visible="true" version="4" changeset="10480682" timestamp="2012-01-24T00:46:12Z">
+  <nd ref="108396"/>
+  <nd ref="108417"/>
+  <tag k="abutters" v="commercial"/>
+  <tag k="cycleway" v="lane"/>
+  <tag k="highway" v="primary"/>
+  <tag k="maxspeed" v="30mph"/>
+  <tag k="name" v="Clerkenwell Road"/>
+  <tag k="ref" v="A5201"/>
+ </way>
+ <way id="4253223" user="Harry Wood" uid="1611" visible="true" version="4" changeset="7118449" timestamp="2011-01-28T23:52:01Z">
+  <nd ref="108409"/>
+  <nd ref="108417"/>
+  <tag k="highway" v="primary"/>
+  <tag k="maxspeed" v="30mph"/>
+  <tag k="name" v="Goswell Road"/>
+  <tag k="ref" v="A1"/>
+ </way>
+</osm>
