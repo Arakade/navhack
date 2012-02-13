@@ -65,7 +65,7 @@
 	  return nodes[id];
   }
 
-  module.getWaysByNode= function(id) {
+  module.getWaysByNode = function(id) {
 	  return nodesToWays[id];
   }
 
