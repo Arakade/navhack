@@ -19,18 +19,19 @@
       jQuery.ajax({
           url: "src/map.xml",
       dataType: "xml",
-          success : module.onMapLoaded,
-          error: module.onGetMapDataError,
+          success : onMapLoaded,
+          error: onGetMapDataError,
           timeout : 100000
       });
   };
 
-  var onGetMapDataError = function(err) {
-	  alert("onGetMapDataError: "+ err);
+  function onGetMapDataError(err) {
+	  console.log("mapDataLoadError: "+ err.statusText)
+	  alert("onGetMapDataError: "+ err.statusText);
   }
 
   /** Record loaded data into our internal datastructures. */
-  module.onMapLoaded = function(map) {
+  function onMapLoaded(map) {
       module.map = map;
 
       bounds = $(map).find("bounds");
