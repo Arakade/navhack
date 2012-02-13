@@ -1,3 +1,4 @@
+var notDeviceTimer;
 var lat = 0,
 	lon = 0,
 	prevLat = 0,
@@ -8,9 +9,22 @@ var latitudes, longitudes, lli;
 
 var saidHi = false;
 
-var deviceInfo = function() {
+function onNotDevice() {
+	console.log("onNotDevice: calling onDeviceReady regardless for testing");
+	onDeviceReady();
+}
+
+var onDeviceReady = function() {
+	console.log("onDeviceReady");
+	clearTimeout(notDeviceTimer);
+
+	initSpeech();
+	initGPS();
+	initControls();
+};
+
+function initSpeech() {
 	var ttsLoaded = function(ret) {
-		// alert("tts loaded: "+ ret);
 		sayHi();
 	}
 
@@ -18,38 +32,42 @@ var deviceInfo = function() {
 		alert("tts failed: "+ ret);
 	}
 
-	window.plugins.tts.startup(ttsLoaded, ttsLoadFailed);
-
-var gpsOptions = { enableHighAccuracy:true};
-//navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
-latitudes=new Array();
-longitudes=new Array();
-lli=0;
-
-var lat0 = 51.52454555500299;
-var lon0 = -0.09877452626824379
-var step = 1e-4;
-for (var i = 0; i <= 20; i++) {
-	latitudes.push(lat0); longitudes.push(lon0);
-	lat0 += step;
+	rnib.tts.init(ttsLoaded, ttsLoadFailed);
 }
 
-// Disabled manual steps to ease testing.
-// latitudes.push(51.5241521); longitudes.push(-0.0989377);
-// latitudes.push(51.5241982); longitudes.push(-0.0989615);
-// latitudes.push(51.5242067); longitudes.push(-0.0989370);
-// latitudes.push(51.5242152); longitudes.push(-0.0986890);
-// latitudes.push(51.5242532); longitudes.push(-0.0987932);
-// latitudes.push(51.5242601); longitudes.push(-0.0987955);
-// latitudes.push(51.5242765); longitudes.push(-0.0987343);
-// latitudes.push(51.5259560); longitudes.push(-0.0997050);
-// latitudes.push(51.5259873); longitudes.push(-0.0995799);
-// latitudes.push(51.5259954); longitudes.push(-0.0995397);
-// latitudes.push(51.5260003); longitudes.push(-0.0997208);
-// latitudes.push(51.5260271); longitudes.push(-0.0995512);
+function initGPS() {
+	var gpsOptions = { enableHighAccuracy:true};
+	//navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
+	latitudes=new Array();
+	longitudes=new Array();
+	lli=0;
 
-$("#MainPage").on("tap", onTap);
-};
+	var lat0 = 51.52454555500299;
+	var lon0 = -0.09877452626824379
+	var step = 1e-4;
+	for (var i = 0; i <= 20; i++) {
+		latitudes.push(lat0); longitudes.push(lon0);
+		lat0 += step;
+	}
+
+	// Disabled manual steps to ease testing.
+	// latitudes.push(51.5241521); longitudes.push(-0.0989377);
+	// latitudes.push(51.5241982); longitudes.push(-0.0989615);
+	// latitudes.push(51.5242067); longitudes.push(-0.0989370);
+	// latitudes.push(51.5242152); longitudes.push(-0.0986890);
+	// latitudes.push(51.5242532); longitudes.push(-0.0987932);
+	// latitudes.push(51.5242601); longitudes.push(-0.0987955);
+	// latitudes.push(51.5242765); longitudes.push(-0.0987343);
+	// latitudes.push(51.5259560); longitudes.push(-0.0997050);
+	// latitudes.push(51.5259873); longitudes.push(-0.0995799);
+	// latitudes.push(51.5259954); longitudes.push(-0.0995397);
+	// latitudes.push(51.5260003); longitudes.push(-0.0997208);
+	// latitudes.push(51.5260271); longitudes.push(-0.0995512);
+}
+
+function initControls() {
+	$("#MainPage").on("tap", onTap);
+}
 
 var getLocation = function() {
     var suc = function(p) {
@@ -69,118 +87,9 @@ var vibrate = function() {
     navigator.notification.vibrate(0);
 };
 
-function roundNumber(num) {
-    var dec = 3;
-    var result = Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
-    return result;
-}
-
-var accelerationWatch = null;
-
-function updateAcceleration(a) {
-    document.getElementById('x').innerHTML = roundNumber(a.x);
-    document.getElementById('y').innerHTML = roundNumber(a.y);
-    document.getElementById('z').innerHTML = roundNumber(a.z);
-}
-
-var toggleAccel = function() {
-    if (accelerationWatch !== null) {
-        navigator.accelerometer.clearWatch(accelerationWatch);
-        updateAcceleration({
-            x : "",
-            y : "",
-            z : ""
-        });
-        accelerationWatch = null;
-    } else {
-        var options = {};
-        options.frequency = 1000;
-        accelerationWatch = navigator.accelerometer.watchAcceleration(
-                updateAcceleration, function(ex) {
-                    alert("accel fail (" + ex.name + ": " + ex.message + ")");
-                }, options);
-    }
-};
-
 var preventBehavior = function(e) {
     e.preventDefault();
 };
-
-function dump_pic(data) {
-    var viewport = document.getElementById('viewport');
-    console.log("setting "+ viewport +", with :"+ data);
-    viewport.style.display = "";
-    viewport.style.position = "absolute";
-    viewport.style.top = "10px";
-    viewport.style.left = "10px";
-    document.getElementById("test_img").src = "data:image/jpeg;base64," + data;
-}
-
-function fail(msg) {
-    alert(msg);
-}
-
-function show_pic() {
-    navigator.camera.getPicture(dump_pic, fail, {
-        quality : 50
-    });
-}
-
-function close() {
-    var viewport = document.getElementById('viewport');
-    viewport.style.position = "relative";
-    viewport.style.display = "none";
-}
-
-function contacts_success(contacts) {
-    alert(contacts.length
-            + ' contacts returned.'
-            + (contacts[2] && contacts[2].name ? (' Third contact is ' + contacts[2].name.formatted)
-                    : ''));
-}
-
-function get_contacts() {
-    var obj = new ContactFindOptions();
-    obj.filter = "";
-    obj.multiple = true;
-    navigator.contacts.find(
-            [ "displayName", "name" ], contacts_success,
-            fail, obj);
-}
-
-function check_network() {
-    var networkState = navigator.network.connection.type;
-
-    var states = {};
-    states[Connection.UNKNOWN]  = 'Unknown connection';
-    states[Connection.ETHERNET] = 'Ethernet connection';
-    states[Connection.WIFI]     = 'WiFi connection';
-    states[Connection.CELL_2G]  = 'Cell 2G connection';
-    states[Connection.CELL_3G]  = 'Cell 3G connection';
-    states[Connection.CELL_4G]  = 'Cell 4G connection';
-    states[Connection.NONE]     = 'No network connection';
-
-    confirm('Connection type:\n ' + states[networkState]);
-}
-
-var watchID = null;
-
-function updateHeading(h) {
-    document.getElementById('h').innerHTML = h.magneticHeading;
-}
-
-function toggleCompass() {
-    if (watchID !== null) {
-        navigator.compass.clearWatch(watchID);
-        watchID = null;
-        updateHeading({ magneticHeading : "Off"});
-    } else {
-        var options = { frequency: 1000 };
-        watchID = navigator.compass.watchHeading(updateHeading, function(e) {
-            alert('Compass Error: ' + e.code);
-        }, options);
-    }
-}
 
 var ttsSuccess = function(ret) {
 	console.log("speech worked: "+ ret);
@@ -195,16 +104,24 @@ function sayHi() {
 	if (saidHi) {
 		return;
 	}
-	window.plugins.tts.speak("Hello to all at the Londroid R N I B Hack-a-thon", ttsSuccess, ttsFailed);
+	rnib.tts.speak("Hello to all at the Londroid R N I B Hack-a-thon", ttsSuccess, ttsFailed);
 	saidHi = true;
 }
 
 function init() {
+	prepForNotDevice();
     // the next line makes it impossible to see Contacts on the HTC Evo since it
     // doesn't have a scroll button
     // document.addEventListener("touchmove", preventBehavior, false);
-    document.addEventListener("deviceready", deviceInfo, true);
-    console.log("init done");
+    document.addEventListener("deviceready", onDeviceReady, true);
+    console.log("init done -- awaiting onDeviceReady");
+}
+
+// Set timeout for this not being device to allow testing on webpage
+// TODO: Find better way to do this.
+function prepForNotDevice() {
+	console.log("prepForNotDevice");
+	notDeviceTimer = setTimeout(onNotDevice, 3000);
 }
 
 function gpsError(ex) {
@@ -232,7 +149,7 @@ function gotGps(p) {
 				var displayName = data.display_name;
 				console.log("displayName: "+ data.display_name);
 				var displayNameStart = displayName; // .split(",")[0];
-				window.plugins.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
+				rnib.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 				prevLat = lat;
 				prevLon = lon;
 				lastSpoke = gpsTime;
@@ -252,7 +169,7 @@ function gotGps(p) {
 
 function onTap(e) {
 	if (lli >= latitudes.length){
-		window.plugins.tts.speak("At end of route", ttsSuccess, ttsFailed);
+		rnib.tts.speak("At end of route", ttsSuccess, ttsFailed);
 	} else {
 		var latitude = latitudes[lli];
 		var longitude = longitudes[lli];
@@ -263,7 +180,7 @@ function onTap(e) {
 			var displayName = data.display_name;
 			console.log("displayName: "+ data.display_name);
 			var displayNameStart = displayName; // .split(",")[0];
-			window.plugins.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
+			rnib.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 		});
 	}
 }

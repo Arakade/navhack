@@ -37,7 +37,7 @@ public class TTS extends Plugin implements OnInitListener {
 
 		try {
 			if (action.equals("speak")) {
-				String text = args.getString(0);
+				final String text = args.getString(0);
 				if (isReady()) {
 					mTts.speak(text, TextToSpeech.QUEUE_ADD, null);
 			        return new PluginResult(status, result);
@@ -45,6 +45,7 @@ public class TTS extends Plugin implements OnInitListener {
 					JSONObject error = new JSONObject();
 					error.put("message","TTS service is still initialzing.");
 					error.put("code", TTS.INITIALIZING);
+					error.put("speech", text);
 			        return new PluginResult(PluginResult.Status.ERROR, error);
 				}
 		    }
