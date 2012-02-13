@@ -179,7 +179,7 @@ function onTap(e) {
 		$.getJSON(url, function(data) {
 			var displayName = data.display_name;
 			console.log("displayName: "+ data.display_name);
-			var displayNameStart = displayName; // .split(",")[0];
+			var displayNameStart = displayName.split(",")[0];
 			rnib.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 		});
 	}
