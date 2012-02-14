@@ -4,6 +4,7 @@
 
     var that = this;
     var module = {};
+    var textArea; // TODO: Try determining HTML item and populate if no TTS
 
     module.init = function(ttsLoadSuccessCallback, ttsLoadFailedCallback) {
     	if (window.plugins.tts) {

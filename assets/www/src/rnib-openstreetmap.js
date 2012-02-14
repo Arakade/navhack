@@ -205,7 +205,7 @@
 
         module.savePost = function (minLon, minLat, maxLon, maxLat) {
             jQuery.ajax({
-                url: "src/map.xml",
+                url: "data/map.xml",
                 dataType: "xml",
                 success : module.doSave,
                 error: module.onGetMapDataError,

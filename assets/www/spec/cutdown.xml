@@ -25,7 +25,7 @@
   <tag k="name" v="Clerkenwell Road"/>
   <tag k="ref" v="A5201"/>
  </way>
-  <way id="97175531" user="Harry Wood" uid="1611" visible="true" version="1" changeset="7118449" timestamp="2011-01-28T23:51:58Z">
+ <way id="97175531" user="Harry Wood" uid="1611" visible="true" version="1" changeset="7118449" timestamp="2011-01-28T23:51:58Z">
   <nd ref="108417"/>
   <nd ref="1125593815"/>
   <tag k="highway" v="unclassified"/>

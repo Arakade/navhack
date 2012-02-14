@@ -16,9 +16,6 @@ describe("Points of interest finder", function () {
     describe("loading data", function () {
         it("should work!", function () {
             var result;
-//                callback = function(result){ results = result; },
-//                expectedPOI = new rnib.poi.PointOfInterest(new rnib.poi.GeoCoord(12.10101, 78.565), "some location");
-
         	var maxLat=51.53363,
 			    minLon=-0.13596,
 			    maxLon=-0.11205,
@@ -40,7 +37,11 @@ describe("Points of interest finder", function () {
         		runs(function() {
         			expect(mapResult).not.toBeNull();
         			// it should have data
-        			rnib.mapData.getNodeById("207960");
+        			var d1 = rnib.mapData.getNodeById("207960");
+        			expect(d1).not.toBeNull();
+        			var d1Ways = d1.getWays();
+        			expect(d1Ways).not.toBeNull();
+        			console.log("d1Ways: "+ d1Ways);
         		});
 
         });
