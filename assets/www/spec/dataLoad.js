@@ -1,58 +1,78 @@
 describe("Points of interest finder", function () {
-//    var pOfIFinder,
-//        server = sinon.fakeServer.create(),
-//        currentLocation = new rnib.poi.GeoCoord(78, 99);
-//
-//    beforeEach(function () {
-//        // http://www.openstreetmap.org/api/0.6/map?bbox={0},{1},{2},{3}
-//        // we need to fake out our response here by loading in the xml file
-//        var response = [200, { "Content-Type": "text/html", "Content-Length": 2 }, "OK"];
-//
-//        server.respondWith(response);
-//
-//        pOfIFinder = new rnib.poi.PointsOfInterestFinder();
-//    });
 
     describe("loading data", function () {
-        it("should work!", function () {
-            var result;
-        	var maxLat=51.53363,
-			    minLon=-0.13596,
-			    maxLon=-0.11205,
-			    minLat=51.51932;
+    	console.log("in loading data function");
 
-        	var callbackCalled = false;
-        	var mapResult;
-        	rnib.mapData.registerDataLoadedCallback(function dataLoaded(map) {
-        		callbackCalled = true;
-        		mapResult = map;
-        	});
-        	rnib.mapData.loadDataFor(minLon, minLat, maxLon, maxLat);
+        var result;
+    	var maxLat=51.53363,
+		    minLon=-0.13596,
+		    maxLon=-0.11205,
+		    minLat=51.51932;
 
-        	waitsFor(function() {
-        			console.log("calledback");
-        			return callbackCalled;
-        		}, "It failed (timeout).", 2000);
+    	var callbackCalled = false;
+    	var mapResult;
+    	rnib.mapData.registerDataLoadedCallback(function dataLoaded(map) {
+    		callbackCalled = true;
+    		mapResult = map;
+    	});
+    	rnib.mapData.loadDataFor(minLon, minLat, maxLon, maxLat);
 
-        		runs(function() {
-        			expect(mapResult).not.toBeNull();
-        			// it should have data
-        			var d1 = rnib.mapData.getNodeById("207960");
-        			expect(d1).not.toBeNull();
-        			var d1Ways = d1.getWays();
-        			expect(d1Ways).not.toBeNull();
-        			console.log("d1Ways: "+ d1Ways);
-        		});
+    	waitsFor(function() {
+			console.log("loading data called-back");
+			return callbackCalled;
+		}, "Loading data timed-out.", 2000);
 
+        it("should not be null", function () {
+			expect(mapResult).not.toBeNull();
+        });
+
+        it("should find a contained node ID", function () {
+			var n1 = rnib.mapData.getNodeById("108417");
+			expect(n1).not.toBeNull();
+        });
+
+        it("should not find an absent node ID", function () {
+			var n1 = rnib.mapData.getNodeById("99999");
+			expect(n1).toBeUndefined();
+        });
+
+        it("should give non-null ways on the contained node ID", function () {
+        	var n1 = rnib.mapData.getNodeById("108417");
+			var n1Ways = n1.getWays();
+			expect(n1Ways).not.toBeNull();
+			console.log("n1Ways: "+ n1Ways);
+        });
+
+        it("should include a known name on the way on the contained node ID", function () {
+        	var n1 = rnib.mapData.getNodeById("108417");
+			var n1Ways = n1.getWays();
+			var w1 = n1Ways[0];
+			expect(w1.name).toEqual("Old Street");
+        });
+
+        it("should find non-null node near a known location", function () {
+        	var lat0 = 51.52454555500299;
+        	var lon0 = -0.09877452626824379;
+        	var n1 = rnib.mapData.getNodeNearestLatLon(lat0, lon0);
+        	expect(n1).not.toBeNull();
+        });
+
+        it("should find a way near a known location", function () {
+        	var lat0 = 51.52454555500299;
+        	var lon0 = -0.09877452626824379;
+        	var n1 = rnib.mapData.getNodeNearestLatLon(lat0, lon0);
+        	var n1Ways = n1.getWays();
+			expect(n1Ways).not.toBeNull();
+        });
+
+        it("should find the expected way near a known location", function () {
+        	var lat0 = 51.52454555500299;
+        	var lon0 = -0.09877452626824379;
+        	var n1 = rnib.mapData.getNodeNearestLatLon(lat0, lon0);
+        	var n1Ways = n1.getWays();
+			var w1 = n1Ways[0];
+			expect(w1.name).toEqual("Clerkenwell and Bunhill Wards Police Station");
         });
     });
-
-//    describe("querying for node XXX", function () {
-//        it("should return the node", function () {
-//            var result = pOfIFinder.getCurrentLocation(currentLocation);
-//
-//            expect(result).toBe("Goswell Road");
-//        });
-//    });
 
 });

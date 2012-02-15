@@ -1,6 +1,6 @@
 // Module to abstract TTS across platforms.
 // Initially hardcoded to log and call Android PhoneGap TTS plugin.
-(function(exports, $, undefined){
+;(function(exports, $){
 
     var that = this;
     var module = {};
@@ -32,4 +32,4 @@
     exports.rnib = exports.rnib || {};
 
     exports.rnib.tts = module;
-})(window, jQuery)
+})(window, jQuery);

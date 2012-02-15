@@ -1,4 +1,4 @@
-(function (exports, undefined) {
+;(function (exports, $) {
 
     var module = {};
 
@@ -64,4 +64,4 @@
 
     exports.rnib.distances = module;
 
-})(window, undefined);
+})(this, jQuery);

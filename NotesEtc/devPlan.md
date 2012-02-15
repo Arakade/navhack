@@ -11,11 +11,16 @@
 	1.	DONE: Tidyup
 	1.	DONE: Get basics of what we had working OK
 	1.	Get speech working consistently
-	1.	Speak pre-canned relevant proximal POI data
+	1.	Speak pre-canned relevant proximal POI data (RK working on this)
 	1.	Load POI data from server.
+	1.	Unify code (e.g. `GeoCoord` and `GoodNode`)
+	1.	Do a minimal amount of performance optimization?
+	1.	Present version to beta-testers
 	1.	...
-1.	Consider moving data manipulation to server.
-	(see "server use discussion" section for more details)
+1.	Consider larger re-architecting (change platform, etc)
+	1.	Consider alternative client-side platform.
+	1.	Consider moving data manipulation to server.
+		(see "server use discussion" section for more details)
 
 # Potential data sources
 

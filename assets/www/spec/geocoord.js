@@ -1,6 +1,6 @@
 describe("GeoCoord", function(){
-   var currentPos = new rnib.poi.GeoCoord(0, 0);
-   var targetPos = new rnib.poi.GeoCoord(3, 4);
+   var currentPos = new rnib.geo.GeoCoord(0, 0);
+   var targetPos = new rnib.geo.GeoCoord(3, 4);
 
     it("should calculate the distance correctly", function () {
         var distance = currentPos.distanceTo(targetPos);

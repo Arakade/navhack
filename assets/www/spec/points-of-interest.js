@@ -22,7 +22,7 @@ function setupServer(server) {
 describe("Points of interest finder", function () {
     var pOfIFinder,
         server,
-        currentLocation = new rnib.poi.GeoCoord(78, 99);
+        currentLocation = new rnib.geo.GeoCoord(78, 99);
 
     beforeEach(function () {
         // http://www.openstreetmap.org/api/0.6/map?bbox={0},{1},{2},{3}
@@ -40,7 +40,7 @@ describe("Points of interest finder", function () {
             var results,
                 result,
                 callback = function(result){ results = result; },
-                expectedPOI = new rnib.poi.PointOfInterest(new rnib.poi.GeoCoord(12.10101, 78.565), "some location");
+                expectedPOI = new rnib.poi.PointOfInterest(new rnib.geo.GeoCoord(12.10101, 78.565), "some location");
 
             pOfIFinder.getPointsOfInterest(currentLocation, 20, callback);
 

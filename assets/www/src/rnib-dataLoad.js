@@ -1,11 +1,12 @@
-(function(exports, $, undefined){
+(function(exports, $, geo){
 
     var that = this;
     var module = {};
 
     var map = null;
-    var nodes = {};
-    var nodesToWays = {};
+    var numberOfNodes = 0;
+    var nodeById = {};
+    var nodesToGoodWays = {};
     var bounds;
 
     var dataLoadedCallback;
@@ -15,10 +16,9 @@
     }
 
   module.loadDataFor = function(minLon, minLat, maxLon, maxLat) {
-	  callback =
-      jQuery.ajax({
-          url: "data/map.xml",
-      dataType: "xml",
+	  callback = jQuery.ajax({
+          url: "data/barbican.xml",
+          dataType: "xml",
           success : onMapLoaded,
           error: onGetMapDataError,
           timeout : 100000
@@ -38,9 +38,11 @@
 
 	  var closestNodeRef;
 	  var c1 = 0;
-	  $(map).find("node").each(function(i, n) {
-		  var key = $(n).attr("id");
-		  nodes[key] = n;
+	  $(map).find("node").each(function(i, nodeSrc) {
+		  var goodNode = new GoodNode(nodeSrc);
+		  var key = goodNode.id;
+		  nodeById[key] = goodNode;
+		  numberOfNodes++;
 		  c1 = i;
 	  });
 	  console.log("last node processed: "+ c1);
@@ -51,10 +53,10 @@
 		  if (goodWay) {
 			  $(w).find("nd").each(function(i, nd) {
 		    		  var node = $(nd).attr("ref");
-		    		  if (!nodesToWays[node]) {
-		    			  nodesToWays[node] = new Array();
+		    		  if (!nodesToGoodWays[node]) {
+		    			  nodesToGoodWays[node] = new Array();
 		    		  }
-		    		  nodesToWays[node].push(goodWay);
+		    		  nodesToGoodWays[node].push(goodWay);
 		    	  });
 			  c2 = i;
 		  }
@@ -65,38 +67,60 @@
 	  dataLoadedCallback(map);
   }
 
+  /**
+   * Get the GoodNode nearest supplied latitude & longitude.
+   * API allows for null if no node near but present implementation always returns an instance.
+   */
+  // TODO: Recommend background thread to do this? (computationally expensive until spatial data-structure used)
   module.getNodeNearestLatLon = function(lat, lon) {
 	  var d = 9999999999999;
-	  var node;
-	  nodes.each(function(i, n){
-          var lat2 = rnib.distances.Lat(n);
-          var lon2 = rnib.distances.Lon(n);
-          var dx = (lat1 - lat2);
-          var dy = (lon1 - lon2);
-          var ds = dx * dx + dy * dy;
+	  var i = 0;
+	  var targetCoords = new geo.GeoCoord(lat, lon);
+	  var closestNode;
+	  for (var id in nodeById) {
+		  var n = nodeById[id];
+          var ds = n.coordinates.distanceTo(targetCoords);
           if (ds < d) {
               d = ds;
-              node = n;
+              closestNode = n;
+              i++;
           }
-      });
-	  return new GoodNode(node);
+      }
+	  console.log("getNodeNearestLatLon("+ lat +", "+ lon +") searched "+ numberOfNodes +" nodes, taking "+ i +" steps to find one "+ d +" away: "+ closestNode);
+	  return closestNode;
   }
 
+  /** Get a GoodNode by node ID or null if ID unknown. */
   module.getNodeById = function(id) {
-	  return new GoodNode(nodes[id]);
+	  return nodeById[id];
   }
 
   function getWaysByNode(id) {
-	  return nodesToWays[id];
+	  return nodesToGoodWays[id];
   }
 
-  function GoodNode(node){
-      this.node = node;
-      this.id = $(node).attr("id");
+  function GoodNode(nodeSrc){
+      this.nodeSrc = nodeSrc;
+      this.id = $(nodeSrc).attr("id");
+      /** private & lazy initialized. */
+      this._coordData = null;
 
       this.getWays = function() {
     	  return getWaysByNode(this.id);
       }
+
+      /** Lazily defines coordinates. */
+      // TODO: Unit test
+      this.__defineGetter__("coordinates",function() {
+    	  if (this._coordData) {
+    		  return this._coordData;
+    	  }
+    	  var jqNode = $(nodeSrc);
+    	  var lat = parseFloat(jqNode.attr("lat"));
+    	  var lon = parseFloat(jqNode.attr("lon"));
+    	  this._coordData = new geo.GeoCoord(lat, lon);
+    	  return this._coordData;
+      });
   }
 
 	function GoodWay(src, wayName){
@@ -105,7 +129,6 @@
 	}
 
 	function buildWayIfNamed(waySource) {
-		// var name = $(waySource).find("tag[k='name']")[0].attr("v");
 		var names = $(waySource).find("tag[k='name']");
 		if (!names || 0 == names.size()) {
 			return null;
@@ -122,4 +145,4 @@
     exports.rnib = exports.rnib || {};
 
     exports.rnib.mapData = module;
-})(window, jQuery)
+})(this, jQuery, rnib.geo)
