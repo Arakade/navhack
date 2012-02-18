@@ -15,6 +15,10 @@ local.properties
 # Backup files
 *~
 
+# Generated source #
+###################
+src/info/navhack/R.java
+
 # Compiled source #
 ###################
 *.com
@@ -32,7 +36,6 @@ local.properties
 *.dmg
 *.gz
 *.iso
-*.jar
 *.rar
 *.tar
 *.zip
