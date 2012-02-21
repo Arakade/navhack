@@ -1,6 +1,6 @@
 // Module to abstract TTS across platforms.
 // Initially hardcoded to log and call Android PhoneGap TTS plugin.
-;(function(exports, $){
+;(function(exports, $, log){
 
     var that = this;
     var module = {};
@@ -15,7 +15,7 @@
     }
 
     module.speak = function(msg) {
-    	console.log("TTS: "+ msg);
+    	log("TTS: "+ msg);
     	if (window.plugins.tts) {
     		window.plugins.tts.speak(msg, ttsSuccess, ttsFailed);
     	}
@@ -26,10 +26,10 @@
     }
 
     function ttsFailed(err) {
-    	console.log("speech failure: code:"+ err.code +", cause:"+ err.message +" (while trying to say \""+ err.speech +"\")");
+    	log("speech failure: code:"+ err.code +", cause:"+ err.message +" (while trying to say \""+ err.speech +"\")");
     }
 
     exports.rnib = exports.rnib || {};
 
     exports.rnib.tts = module;
-})(window, jQuery);
+})(window, jQuery, rnib.log.log);
