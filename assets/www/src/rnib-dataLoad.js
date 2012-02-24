@@ -1,4 +1,4 @@
-(function(exports, $, geo){
+(function(exports, $, geo, log){
 
     var that = this;
     var module = {};
@@ -26,7 +26,7 @@
   };
 
   function onGetMapDataError(err) {
-	  console.log("mapDataLoadError: "+ err.statusText)
+	  log("mapDataLoadError: "+ err.statusText)
 	  alert("onGetMapDataError: "+ err.statusText);
   }
 
@@ -45,7 +45,7 @@
 		  numberOfNodes++;
 		  c1 = i;
 	  });
-	  console.log("last node processed: "+ c1);
+	  log("last node processed: "+ c1);
 
 	  var c2 = 0;
 	  $(map).find("way").each(function(i, w) {
@@ -62,7 +62,7 @@
 		  }
 	  });
 
-	  console.log("last way processed: "+ c2 +", calling dataLoadedCallback");
+	  log("last way processed: "+ c2 +", calling dataLoadedCallback");
 
 	  dataLoadedCallback(map);
   }
@@ -86,7 +86,7 @@
               i++;
           }
       }
-	  console.log("getNodeNearestLatLon("+ lat +", "+ lon +") searched "+ numberOfNodes +" nodes, taking "+ i +" steps to find one "+ d +" away: "+ closestNode);
+	  log("getNodeNearestLatLon("+ lat +", "+ lon +") searched "+ numberOfNodes +" nodes, taking "+ i +" steps to find one "+ d +" away: "+ closestNode);
 	  return closestNode;
   }
 
@@ -145,4 +145,4 @@
     exports.rnib = exports.rnib || {};
 
     exports.rnib.mapData = module;
-})(this, jQuery, rnib.geo)
+})(this, jQuery, rnib.geo, rnib.log.log)

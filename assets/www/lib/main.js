@@ -1,3 +1,5 @@
+var log = rnib.log.log;
+
 var notDeviceTimer;
 var lat = 0,
 	lon = 0,
@@ -10,12 +12,12 @@ var latitudes, longitudes, lli;
 var saidHi = false;
 
 function onNotDevice() {
-	console.log("onNotDevice: calling onDeviceReady regardless for testing");
+	log("onNotDevice: calling onDeviceReady regardless for testing");
 	onDeviceReady();
 }
 
 var onDeviceReady = function() {
-	console.log("onDeviceReady");
+	log("onDeviceReady");
 	clearTimeout(notDeviceTimer);
 
 	initSpeech();
@@ -71,7 +73,7 @@ function initControls() {
 
 var getLocation = function() {
     var suc = function(p) {
-        console.log(p.coords.latitude + ", " + p.coords.longitude);
+        log(p.coords.latitude + ", " + p.coords.longitude)
     };
     var locFail = function(ex) {
     	alert("location failed: "+ ex);
@@ -92,11 +94,11 @@ var preventBehavior = function(e) {
 };
 
 var ttsSuccess = function(ret) {
-	console.log("speech worked: "+ ret);
+	log("speech worked: "+ ret);
 };
 
 var ttsFailed = function(ret) {
-	console.log("speech failed: "+ ret);
+	log("speech failed: "+ ret);
 	alert("speech failed: "+ ret);
 };
 
@@ -114,13 +116,13 @@ function init() {
     // doesn't have a scroll button
     // document.addEventListener("touchmove", preventBehavior, false);
     document.addEventListener("deviceready", onDeviceReady, true);
-    console.log("init done -- awaiting onDeviceReady");
+    log("init done -- awaiting onDeviceReady");
 }
 
 // Set timeout for this not being device to allow testing on webpage
 // TODO: Find better way to do this.
 function prepForNotDevice() {
-	console.log("prepForNotDevice");
+	log("prepForNotDevice");
 	notDeviceTimer = setTimeout(onNotDevice, 3000);
 }
 
@@ -129,7 +131,7 @@ function gpsError(ex) {
 }
 
 function gotGps(p) {
-	console.log("gotGps: "+ p);
+	log("gotGps: "+ p);
 	prevLat = 0;
 	prevLon = 0;
 	lat=p.coords.latitude;
@@ -138,16 +140,16 @@ function gotGps(p) {
 
 	// If >10secs has elapsed since the last speech:
 	var deltaT = gpsTime - lastSpoke;
-	console.log("gpsTime: "+ gpsTime +", deltaT: "+ deltaT);
+	log("gpsTime: "+ gpsTime +", deltaT: "+ deltaT);
 	if (deltaT >= 10000) {
 		var distance = GeoCodeCalc.CalcDistance(prevLat, prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
-		console.log("distance: "+ distance);
+		log("distance: "+ distance);
 		if (distance > 0.05) {
 			var url = "http://nominatim.openstreetmap.org/reverse?lat="+lat+"&lon="+lon+"&format=json";
 			$.getJSON(url, function(data) {
-				console.log("jsonData: "+ data);
+				log("jsonData: "+ data);
 				var displayName = data.display_name;
-				console.log("displayName: "+ data.display_name);
+				log("displayName: "+ data.display_name);
 				var displayNameStart = displayName; // .split(",")[0];
 				rnib.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 				prevLat = lat;
@@ -155,15 +157,15 @@ function gotGps(p) {
 				lastSpoke = gpsTime;
 				alert(data);
 			}, function(err) {
-				console.log("jsonFail: "+ err);
+				log("jsonFail: "+ err);
 			});
 			lastSpoke = gpsTime;
-			console.log("queried at "+ gpsTime);
+			log("queried at "+ gpsTime);
 		} else {
-			console.log("not moved far enough");
+			log("not moved far enough");
 		}
 	} else {
-		console.log("not been long enough");
+		log("not been long enough");
 	}
 }
 
@@ -173,12 +175,12 @@ function onTap(e) {
 	} else {
 		var latitude = latitudes[lli];
 		var longitude = longitudes[lli];
-		console.log("lli:"+ lli +", lon:"+ longitude +", lat:"+ latitude);
+		log("lli:"+ lli +", lon:"+ longitude +", lat:"+ latitude)
 		lli++;
 		var url = "http://nominatim.openstreetmap.org/reverse?lat="+latitude+"&lon="+longitude+"&format=json";
 		$.getJSON(url, function(data) {
 			var displayName = data.display_name;
-			console.log("displayName: "+ data.display_name);
+			log("displayName: "+ data.display_name);
 			var displayNameStart = displayName.split(",")[0];
 			rnib.tts.speak(displayNameStart, ttsSuccess, ttsFailed);
 		});
