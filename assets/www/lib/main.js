@@ -26,11 +26,11 @@ var onDeviceReady = function() {
 function initSpeech() {
 	var ttsLoaded = function(ret) {
 		sayHi();
-	}
+	};
 
 	var ttsLoadFailed = function(ret) {
 		alert("tts failed: "+ ret);
-	}
+	};
 
 	rnib.tts.init(ttsLoaded, ttsLoadFailed);
 }
@@ -71,7 +71,7 @@ function initControls() {
 
 var getLocation = function() {
     var suc = function(p) {
-        console.log(p.coords.latitude + ", " + p.coords.longitude)
+        console.log(p.coords.latitude + ", " + p.coords.longitude);
     };
     var locFail = function(ex) {
     	alert("location failed: "+ ex);
@@ -93,12 +93,12 @@ var preventBehavior = function(e) {
 
 var ttsSuccess = function(ret) {
 	console.log("speech worked: "+ ret);
-}
+};
 
 var ttsFailed = function(ret) {
 	console.log("speech failed: "+ ret);
 	alert("speech failed: "+ ret);
-}
+};
 
 function sayHi() {
 	if (saidHi) {
@@ -173,7 +173,7 @@ function onTap(e) {
 	} else {
 		var latitude = latitudes[lli];
 		var longitude = longitudes[lli];
-		console.log("lli:"+ lli +", lon:"+ longitude +", lat:"+ latitude)
+		console.log("lli:"+ lli +", lon:"+ longitude +", lat:"+ latitude);
 		lli++;
 		var url = "http://nominatim.openstreetmap.org/reverse?lat="+latitude+"&lon="+longitude+"&format=json";
 		$.getJSON(url, function(data) {
