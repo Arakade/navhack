@@ -21,7 +21,6 @@ import com.phonegap.api.PluginResult;
 
 public class TTS extends Plugin implements OnInitListener {
 
-	private static final String LOG_TAG = "TTS";
 	private static final int STOPPED = 0;
 	private static final int INITIALIZING = 1;
 	private static final int STARTED = 2;

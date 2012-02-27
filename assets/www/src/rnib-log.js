@@ -2,18 +2,10 @@
 	var module = {};
 	var i = 0;
 
-	module.log = function(msg) {
-		logLengthSafe(msg);
-		logInsert(escapeHTML(msg));
-	};
-
-	module.logHtml = function(html) {
-		logLengthSafe(html2txt(html));
-		logInsert(html);
-	}
-
 	function logInsert(html) {
-		$('#console').html(function(index, oldHtml) {return html +'<br/>'+ oldHtml});
+		$('#console').html(function(index, oldHtml) {
+			return html +'<br/>'+ oldHtml;
+		});
 	}
 
 	function escapeHTML(h) {
@@ -38,7 +30,7 @@
 
 	function describe(o) {
 		var s = o +':{\n';
-		for (k in o) {
+		for (var k in o) {
 			s = s +'  '+ k +":'"+ o[k] +"'\n";
 		}
 		return s +'}';
@@ -49,6 +41,15 @@
 		// TODO: Implement length-safe logging
 	}
 
+	module.log = function(msg) {
+		logLengthSafe(msg);
+		logInsert(escapeHTML(msg));
+	};
+
+	module.logHtml = function(html) {
+		logLengthSafe(html2txt(html));
+		logInsert(html);
+	};
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.log = module;

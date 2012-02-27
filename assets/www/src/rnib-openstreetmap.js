@@ -1,220 +1,205 @@
-(function(exports, $, undefined){
+;(function(exports, $) {
 
-    var that = this;
-    var module = {};
+	var that = this;
+	var module = {};
 
-    var nearbyRadius = 10;
-    var factor = 100000;
+	var nearbyRadius = 10;
+	var factor = 100000;
 
-    //XDocument map = null;
-    var map = null,
-        olat,
-        olon,
-        maxLat,
-        minLat,
-        maxLon,
-        minLon;
+	//XDocument map = null;
+	var map = null,
+		olat,
+		olon,
+		maxLat,
+		minLat,
+		maxLon,
+		minLon;
 
-    var fileXml;
+	var fileXml;
 
-    module.Tags = function (element) {
+	module.Tags = function(element) {
 
-                    var dict = {};
-                    var parent = $(element);
-                    var tags = parent.children("tag");
+		var dict = {};
+		var parent = $(element);
+		var tags = parent.children("tag");
 
-                    tags.each(function(i, t){
-                        dict[$(t).attr("k")] = $(t).attr("k");
-                    });
+		tags.each(function(i, t) {
+			dict[$(t).attr("k")] = $(t).attr("k");
+		});
 
-                    return dict;
-    };
+		return dict;
+	};
 
-    module.loadData = function(map) {
+	module.loadData = function(map) {
 
-        module.map = map;
+		module.map = map;
 
-                        var bounds = $(map).find("bounds"); // query xml document
+		var bounds = $(map).find("bounds"); // query xml document
 
-//                        minLat = double.Parse(bounds.Attribute("minlat").Value);
-//                        maxLat = double.Parse(bounds.Attribute("maxlat").Value);
-//                        minLon = double.Parse(bounds.Attribute("minlon").Value);
-//                        maxLon = double.Parse(bounds.Attribute("maxlon").Value);
+//      minLat = double.Parse(bounds.Attribute("minlat").Value);
+//      maxLat = double.Parse(bounds.Attribute("maxlat").Value);
+//      minLon = double.Parse(bounds.Attribute("minlon").Value);
+//      maxLon = double.Parse(bounds.Attribute("maxlon").Value);
 
-        var maxLat=51.53363,
-            minLon=-0.13596,
-            maxLon=-0.11205,
-            minLat=51.51932;
+		var maxLat = 51.53363,
+			minLon = -0.13596,
+			maxLon = -0.11205,
+			minLat = 51.51932;
 
-        var d, node, crossings;
+		var d, node, crossings;
 
-                        var lat1 = minLat + (maxLat - minLat) / 2;
-                        var lon1 = minLon + (maxLon - minLon) / 2;
-                        node = null;
-                        d = 9999999999999;
-                        crossings = new Array();
+		var lat1 = minLat + (maxLat - minLat) / 2;
+		var lon1 = minLon + (maxLon - minLon) / 2;
+		node = null;
+		d = 9999999999999;
+		crossings = [];
 
-        var closestNodeRef,
-            nodes = $(map)
-                .find("node");
+		var closestNodeRef,
+			nodes = $(map).find("node");
 
-        nodes.each(function(i, n){
-            var lat2 = rnib.distances.Lat(n);
-            var lon2 = rnib.distances.Lon(n);
-            var dx = (lat1 - lat2);
-            var dy = (lon1 - lon2);
-            var ds = dx * dx + dy * dy;
-            if (ds < d)
-            {
-                d = ds;
-                node = n;
-            }
-        });
+		nodes.each(function(i, n) {
+			var lat2 = rnib.distances.Lat(n);
+			var lon2 = rnib.distances.Lon(n);
+			var dx = (lat1 - lat2);
+			var dy = (lon1 - lon2);
+			var ds = dx * dx + dy * dy;
+			if (ds < d) {
+				d = ds;
+				node = n;
+			}
+		});
 
-        module.findWays($(node));
+		module.findWays($(node));
+		closestNodeRef = $(node).attr("id");
 
-        closestNodeRef = $(node).attr("id");
+		var ways = $(map).find("way nd[ref='" + closestNodeRef + "']");
 
-        var ways = $(map)
-                    .find("way nd[ref='" + closestNodeRef + "']");
+		var k = $(ways.parent()
+		.find("tag[k='name']")[0]).attr("v");
 
-        var k = $(ways.parent()
-                    .find("tag[k='name']")[0]).attr("v");
+		//Move(node);
+	};
 
-        //Move(node);
-    }
+	module.find = function() {
+//      sa = form2.URL.Split(new char[] { '=' });
+//      sc = form2.SessionCookie;
+//      int ie = sc.IndexOf("=");
+//      int isc = sc.IndexOf(";");
+//      Cookie session = new Cookie(sc.Substring(0, ie), sc.Substring(0, isc).Substring(ie + 2), null, "www.openstreetmap.org");
 
-        module.find = function () {
-//            sa = form2.URL.Split(new char[] { '=' });
-//            sc = form2.SessionCookie;
-//            int ie = sc.IndexOf("=");
-//            int isc = sc.IndexOf(";");
-//            Cookie session = new Cookie(sc.Substring(0, ie), sc.Substring(0, isc).Substring(ie + 2), null, "www.openstreetmap.org");
+//      minLon = double.Parse(LeftOfAmpersand(sa[1]));
+//      minLat = double.Parse(LeftOfAmpersand(sa[2]));
+//      maxLon = double.Parse(LeftOfAmpersand(sa[3]));
+//      maxLat = double.Parse(LeftOfAmpersand(sa[4]));
 
-//            minLon = double.Parse(LeftOfAmpersand(sa[1]));
-//            minLat = double.Parse(LeftOfAmpersand(sa[2]));
-//            maxLon = double.Parse(LeftOfAmpersand(sa[3]));
-//            maxLat = double.Parse(LeftOfAmpersand(sa[4]));
+		var maxLat = 51.53363,
+			minLon = -0.13596,
+			maxLon = -0.11205,
+			minLat = 51.51932;
 
-            var maxLat=51.53363,
-                minLon=-0.13596,
-                maxLon=-0.11205,
-                minLat=51.51932;
+		var lat = minLat + (maxLat - minLat) / 2;
+		var lon = minLon + (maxLon - minLon) / 2;
 
-            var lat = minLat + (maxLat - minLat) / 2;
-            var lon = minLon + (maxLon - minLon) / 2;
+		var delta = 0.01;
+		minLat = lat - delta / 2;
+		maxLat = lat + delta / 2;
+		minLon = lon - delta;
+		maxLon = lon + delta;
 
-            var delta = 0.01;
+		var formData =
+			"maxlat=" + maxLat + "&minlon=" + minLon + "&maxlon=" + maxLon + "&minlat=" + minLat +
+			"&format=mapnik&mapnik_format=jpeg&mapnik_scale=14000" +
+			"&osmarender_format=png&osmarender_zoom=4&commit=Export";
+		module.savePost(minLon, minLat, maxLon, maxLat);
+		//LoadData();
 
-            minLat = lat - delta / 2;
-            maxLat = lat + delta / 2;
-            minLon = lon - delta;
-            maxLon = lon + delta;
+	};
 
-            var formData =
-                "maxlat=" + maxLat +"&minlon=" + minLon + "&maxlon=" + maxLon + "&minlat=" + minLat
-                + "&format=mapnik&mapnik_format=jpeg&mapnik_scale=14000"
-                + "&osmarender_format=png&osmarender_zoom=4&commit=Export";
-            module.savePost(minLon, minLat, maxLon, maxLat);
-            //LoadData();
+	module.WaysFromNode = function(node) {
+		var id = $(node).attr("id");
+		var ways = $(module.map).find("way nd[ref='" + id + "']").parent();
 
-        };
+//      var ways2 = $(map)
+//          .find("way")
+//          .find("nd[ref='" + id + "']")
+//          .parent();
 
-    module.WaysFromNode = function(node)
-            {
-                var id = $(node).attr("id");
-                var ways = $(module.map)
-                            .find("way nd[ref='" + id + "']")
-                            .parent();
+		return ways;
+	};
 
-//                var ways2 = $(map)
-//                    .find("way")
-//                    .find("nd[ref='" + id + "']")
-//                    .parent();
+	module.Nodes = function(way) {
+		var nodes = [];
+		for (var e in way.find("nd")) {
+			$(map).find("node").each(function(i, x) {
+				if ($(x).attr("id") === $(e).attr("ref")) {
+					nodes.push(x);
+				}
+			});
+		}
+		return nodes;
+	};
 
-                return ways;
-            }
+	module.findWays = function(node) {
 
-    module.Nodes = function(way)
-            {
-                var nodes = new Array();
-                for (var e in way.find("nd")){
-                    $(map).find("node").each(function(i, x){
-                        if ($(x).attr("id") === $(e).attr("ref")){
-                            nodes.push(x);
-                        }
-                    });
-                }
-                return nodes;
-            }
+		var index = -1;
 
-    module.findWays = function(node){
+		var ways = module.WaysFromNode(node);
 
-            var index = -1;
+		for (var w in ways) {
+			var s = null;
+			var d = null;
 
-            var ways = module.WaysFromNode(node);
+			try {
+				s += module.Tags(w).name;
+			} catch(err) {
+				s += "Unknown";
+			}
 
-            for (var w in ways)
-            {
-                var s = null;
-                var d = null;
+			var nodes = module.Nodes(w);
 
-                try
-                {
-                    s += module.Tags(w)["name"];
-                }
-                catch(err)
-                {
-                    s += "Unknown";
-                };
+			var count = nodes.Count();
 
-                var nodes = module.Nodes(w);
+			var elements = [];
 
-                var count = nodes.Count();
+			var i = 0;
 
-                var elements = new Array();
+			for (var n in nodes) {
+				if ($(n).attr("id") == $(node).attr("id")) {
+					index = i;
+				}
+				elements[i++] = n;
+			}
+			if (index < count - 1) {
+				var a1 = module.Angle(elements[index + 1], node);
+				// d += module.Direction(a1);
+				//listBox1.Items.Add(new Segment(elements[index + 1], s, d, a1, (string)w.Attribute("id")));
+				d = null;
+			}
+			if (index > 0) {
+				var a2 = module.Angle(elements[index - 1], node);
+				//d += module.Direction(a2);
+				//listBox1.Items.Add(new Segment(elements[index - 1], s, d, a2, (string)w.Attribute("id")));
+			}
+		}
+	};
 
-                var i = 0;
+	module.doSave = function(data) {
+		// fileXml = data;
+		module.loadData(data);
+	};
 
-                for (var n in nodes)
-                {
-                    if ($(n).attr("id") == $(node).attr("id"))
-                        index = i;
-                    elements[i++] = n;
-                }
-                if (index < count - 1)
-                {
-                    var a1 = module.Angle(elements[index + 1], node);
-                    // d += module.Direction(a1);
-                    //listBox1.Items.Add(new Segment(elements[index + 1], s, d, a1, (string)w.Attribute("id")));
-                    d = null;
-                }
-                if (index > 0)
-                {
-                    var a2 = module.Angle(elements[index - 1], node);
-                    //d += module.Direction(a2);
-                    //listBox1.Items.Add(new Segment(elements[index - 1], s, d, a2, (string)w.Attribute("id")));
-                }
-            }
-    };
+	module.savePost = function(minLon, minLat, maxLon, maxLat) {
+		$.ajax({
+			url : "data/barbican.xml",
+			dataType : "xml",
+			success : module.doSave,
+			error : module.onGetMapDataError,
+			timeout : 100000
+		});
 
-        module.doSave = function (data) {
-            // fileXml = data;
-            module.loadData(data);
-        };
+	};
 
-        module.savePost = function (minLon, minLat, maxLon, maxLat) {
-            jQuery.ajax({
-                url: "data/barbican.xml",
-                dataType: "xml",
-                success : module.doSave,
-                error: module.onGetMapDataError,
-                timeout : 100000
-            });
+	exports.rnib = exports.rnib || {};
 
-        };
-
-    exports.rnib = exports.rnib || {};
-
-    exports.rnib.openStreetMap = module;
-})(window, jQuery)
+	exports.rnib.openStreetMap = module;
+})(window, jQuery);

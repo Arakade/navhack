@@ -1,35 +1,34 @@
 // Module to abstract TTS across platforms.
 // Initially hardcoded to log and call Android PhoneGap TTS plugin.
-;(function(exports, $, log){
+;(function(exports, $, pgTTS, log) {
 
-    var that = this;
-    var module = {};
-    var textArea; // TODO: Try determining HTML item and populate if no TTS
+	var module = {};
+	var textArea; // TODO: Try determining HTML item and populate if no TTS
 
-    module.init = function(ttsLoadSuccessCallback, ttsLoadFailedCallback) {
-    	if (window.plugins.tts) {
-    		window.plugins.tts.startup(ttsLoadSuccessCallback, ttsLoadFailedCallback);
-    	} else {
-    		console.log("no device TTS available (from window.plugins.tts)");
-    	}
-    }
+	function ttsSuccess(result) {
+		// do nothing
+	}
 
-    module.speak = function(msg) {
-    	log("TTS: "+ msg);
-    	if (window.plugins.tts) {
-    		window.plugins.tts.speak(msg, ttsSuccess, ttsFailed);
-    	}
-    }
+	function ttsFailed(err) {
+		log("speech failure: code:" + err.code + ", cause:" + err.message + " (while trying to say \"" + err.speech + "\")");
+	}
 
-    function ttsSuccess(result) {
-    	// do nothing
-    }
+	module.init = function(ttsLoadSuccessCallback, ttsLoadFailedCallback) {
+		if (pgTTS) {
+			pgTTS.startup(ttsLoadSuccessCallback, ttsLoadFailedCallback);
+		} else {
+			log("no device TTS available (from pgTTS)");
+		}
+	};
 
-    function ttsFailed(err) {
-    	log("speech failure: code:"+ err.code +", cause:"+ err.message +" (while trying to say \""+ err.speech +"\")");
-    }
+	module.speak = function(msg) {
+		log("TTS: " + msg);
+		if (pgTTS) {
+			pgTTS.speak(msg, ttsSuccess, ttsFailed);
+		}
+	};
 
-    exports.rnib = exports.rnib || {};
+	exports.rnib = exports.rnib || {};
 
-    exports.rnib.tts = module;
-})(window, jQuery, rnib.log.log);
+	exports.rnib.tts = module;
+})(window, jQuery, window.plugins.tts, rnib.log.log);
