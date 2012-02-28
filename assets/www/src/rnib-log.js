@@ -1,5 +1,11 @@
-;(function(exports, $){
+;(function(exports, $, console){
 	var module = {};
+	var LEVEL_COLOUR = [
+		'black',
+		'blue',
+		'orange',
+		'red'
+	];
 	var i = 0;
 
 	function logInsert(html) {
@@ -31,26 +37,54 @@
 	function describe(o) {
 		var s = o +':{\n';
 		for (var k in o) {
-			s = s +'  '+ k +":'"+ o[k] +"'\n";
+			if (o.hasOwnProperty(k)) {
+				s = s +'  '+ k +":'"+ o[k] +"'\n";
+			}
 		}
 		return s +'}';
 	}
 
-	function logLengthSafe(o) {
-		console.log(o);
+	function chopToSafeLengths(o) {
 		// TODO: Implement length-safe logging
+		return o;
 	}
 
-	module.log = function(msg) {
-		logLengthSafe(msg);
-		logInsert(escapeHTML(msg));
+	function consoleLogAtLevel(lvl, msg) {
+		var nonHtml = escapeHTML(msg);
+		logInsert('<font color="' + LEVEL_COLOUR[lvl] + '">' + nonHtml + '</font>');
+	}
+
+	function logAtLevel(lvl, msg) {
+		consoleLogAtLevel(lvl, msg);
+	}
+
+	module.debug = function(msg) {
+		console.log(chopToSafeLengths(msg));
+		logInsert(escapeHTML(msg)); // optimized version for log
 	};
 
+	module.info = function(msg) {
+		console.info(chopToSafeLengths(msg));
+		logAtLevel(1, msg);
+	};
+
+	module.warn = function(msg) {
+		console.warn(chopToSafeLengths(msg));
+		logAtLevel(2, msg);
+	};
+
+	module.error = function(msg) {
+		console.error(chopToSafeLengths(msg));
+		logAtLevel(3, msg);
+	};
+
+	module.log = module.debug;
+
 	module.logHtml = function(html) {
-		logLengthSafe(html2txt(html));
+		console.log(chopToSafeLengths(html2txt(html))); // defaults to 'log' level
 		logInsert(html);
 	};
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.log = module;
-})(this, jQuery);
+})(this, jQuery, console);

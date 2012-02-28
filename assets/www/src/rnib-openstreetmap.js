@@ -129,12 +129,15 @@
 
 	module.Nodes = function(way) {
 		var nodes = [];
-		for (var e in way.find("nd")) {
-			$(map).find("node").each(function(i, x) {
-				if ($(x).attr("id") === $(e).attr("ref")) {
-					nodes.push(x);
-				}
-			});
+		var nds = way.find("nd");
+		for (var e in nds) {
+			if (nds.hasOwnProperty(e)) {
+				$(map).find("node").each(function(i, x) {
+					if ($(x).attr("id") === $(e).attr("ref")) {
+						nodes.push(x);
+					}
+				});
+			}
 		}
 		return nodes;
 	};
@@ -146,39 +149,43 @@
 		var ways = module.WaysFromNode(node);
 
 		for (var w in ways) {
-			var s = null;
-			var d = null;
+			if (ways.hasOwnProperty(w)) {
+				var s = null;
+				var d = null;
 
-			try {
-				s += module.Tags(w).name;
-			} catch(err) {
-				s += "Unknown";
-			}
-
-			var nodes = module.Nodes(w);
-
-			var count = nodes.Count();
-
-			var elements = [];
-
-			var i = 0;
-
-			for (var n in nodes) {
-				if ($(n).attr("id") == $(node).attr("id")) {
-					index = i;
+				try {
+					s += module.Tags(w).name;
+				} catch(err) {
+					s += "Unknown";
 				}
-				elements[i++] = n;
-			}
-			if (index < count - 1) {
-				var a1 = module.Angle(elements[index + 1], node);
-				// d += module.Direction(a1);
-				//listBox1.Items.Add(new Segment(elements[index + 1], s, d, a1, (string)w.Attribute("id")));
-				d = null;
-			}
-			if (index > 0) {
-				var a2 = module.Angle(elements[index - 1], node);
-				//d += module.Direction(a2);
-				//listBox1.Items.Add(new Segment(elements[index - 1], s, d, a2, (string)w.Attribute("id")));
+
+				var nodes = module.Nodes(w);
+
+				var count = nodes.Count();
+
+				var elements = [];
+
+				var i = 0;
+
+				for (var n in nodes) {
+					if (nodes.hasOwnProperty(n)) {
+						if ($(n).attr("id") == $(node).attr("id")) {
+							index = i;
+						}
+						elements[i++] = n;
+					}
+				}
+				if (index < count - 1) {
+					var a1 = module.Angle(elements[index + 1], node);
+					// d += module.Direction(a1);
+					//listBox1.Items.Add(new Segment(elements[index + 1], s, d, a1, (string)w.Attribute("id")));
+					d = null;
+				}
+				if (index > 0) {
+					var a2 = module.Angle(elements[index - 1], node);
+					//d += module.Direction(a2);
+					//listBox1.Items.Add(new Segment(elements[index - 1], s, d, a2, (string)w.Attribute("id")));
+				}
 			}
 		}
 	};

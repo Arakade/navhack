@@ -127,12 +127,14 @@
 		var targetCoords = new geo.GeoCoord(lat, lon);
 		var closestNode = null;
 		for (var id in nodeById) {
-			var n = nodeById[id];
-			var ds = n.coordinates.distanceTo(targetCoords);
-			if (ds < d) {
-				d = ds;
-				closestNode = n;
-				i++;
+			if (nodeById.hasOwnProperty(id)) {
+				var n = nodeById[id];
+				var ds = n.coordinates.distanceTo(targetCoords);
+				if (ds < d) {
+					d = ds;
+					closestNode = n;
+					i++;
+				}
 			}
 		}
 		log("getNodeNearestLatLon(" + lat + ", " + lon + ") searched " + numberOfNodes + " nodes, taking " + i + " steps to find one " + d + " away: " + closestNode);
