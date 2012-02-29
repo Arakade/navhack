@@ -1,8 +1,8 @@
-;(function(exports, $, tts, log, posPollerModule) {
+;(function(exports, $, tts, log, perUpdateModule, mockPositionnerModule) {
 
 	var module = {};
 
-	var posPoller,
+	var perUpdate,
 		mockPositionner = null;
 	var notDeviceTimer = null;
 	var saidHi = false;
@@ -57,11 +57,11 @@
 			clearTimeout(notDeviceTimer);
 		}
 
-		posPoller = new posPollerModule.PosPoller();
-		mockPositionner = new posPollerModule.MockPositionner();
+		mockPositionner = new mockPositionnerModule.MockPositionner();
 		initSpeech();
-		posPoller.initPolling();
 		initControls();
+		perUpdate = new perUpdateModule.PerUpdate(); // move into initSpeech() callback
+		perUpdate.startReporting();
 		log("onDeviceReady done");
 	}
 
@@ -90,4 +90,4 @@
 
 	exports.rnib.main = module;
 
-})(window, jQuery, rnib.tts, rnib.log.log, rnib.posPoller);
+})(window, jQuery, rnib.tts, rnib.log.log, rnib.perUpdate, rnib.mockPositionner);
