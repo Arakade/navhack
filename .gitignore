@@ -61,7 +61,7 @@ Thumbs.db
 *.tar
 
 # Vim swap files (but captures SWFs and SWCs accidentally atm)
-.sw[a-z]
+*.sw[a-z]
 
 /CSharpLocationProject/Location/_ReSharper.Location/BuildScriptCache/.crc
 /CSharpLocationProject/Location/_ReSharper.Location/BuildScriptCache/.version

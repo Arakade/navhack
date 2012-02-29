@@ -11,8 +11,8 @@
 	}
 
 
-	module.registerCompassCallback = function(compassCallback) {
-		this.compassCallback = compassCallback;
+	module.registerCompassCallback = function(newCallback) {
+		this.compassCallback = newCallback;
 	};
 
 	module.toggleCompass = function() {

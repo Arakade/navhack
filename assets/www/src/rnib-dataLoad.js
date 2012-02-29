@@ -50,9 +50,9 @@
 			return null;
 		}
 
-		var name = $(names[0]).attr("v");
-		if (name) {
-			return new GoodWay(waySource, name);
+		var aName = $(names[0]).attr("v");
+		if (aName) {
+			return new GoodWay(waySource, aName);
 		} else {
 			return null;
 		}
@@ -82,7 +82,7 @@
 		$(map).find("way").each(function(i, w) {
 			var goodWay = buildWayIfNamed(w);
 			if (goodWay) {
-				$(w).find("nd").each(function(i, nd) {
+				$(w).find("nd").each(function(j, nd) {
 					var node = $(nd).attr("ref");
 					if (!nodesToGoodWays[node]) {
 						nodesToGoodWays[node] = [];

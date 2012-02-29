@@ -40,7 +40,6 @@ describe("Points of interest finder", function() {
 	describe("retrieving points of interest", function() {
 		it("should return an array with the points of interest in it", function() {
 			var results = null,
-				result,
 				callback = function(result) {
 					results = result;
 				},
@@ -49,7 +48,7 @@ describe("Points of interest finder", function() {
 			pOfIFinder.getPointsOfInterest(currentLocation, 20, callback);
 
 			server.respond();
-			result = results[0];
+			var result = results[0];
 
 			expect(result.coord.lat).toBe(expectedPOI.coord.lat);
 			expect(result.coord.lon).toBe(expectedPOI.coord.lon);
