@@ -1,11 +1,10 @@
-;(function(exports, $, tts, log, GeoCodeCalc) {
+;(function(exports, $, tts, log, posPollerModule) {
 
 	var module = {};
 
-	var notDeviceTimer;
-	var lat = 0, lon = 0, prevLat = 0, prevLon = 0, address = 0, lastSpoke = new Date();
-	var latitudes, longitudes, lli;
-
+	var posPoller,
+		mockPositionner = null;
+	var notDeviceTimer = null;
 	var saidHi = false;
 
 	function ttsSuccess(ret) {
@@ -36,16 +35,6 @@
 		tts.init(ttsLoaded, ttsLoadFailed);
 	}
 
-	function getLocation() {
-		var suc = function(p) {
-			log(p.coords.latitude + ", " + p.coords.longitude);
-		};
-		var locFail = function(ex) {
-			alert("location failed: " + ex);
-		};
-		navigator.geolocation.getCurrentPosition(suc, locFail);
-	}
-
 	function beep() {
 		navigator.notification.beep(2);
 	}
@@ -58,112 +47,22 @@
 		e.preventDefault();
 	}
 
-	function gpsError(ex) {
-		alert("location failed: " + ex);
-	}
-
-	function gotGps(p) {
-		log("gotGps: " + p);
-		prevLat = 0;
-		prevLon = 0;
-		lat = p.coords.latitude;
-		lon = p.coords.longitude;
-		var gpsTime = new Date(p.timestamp);
-
-		// If >10secs has elapsed since the last speech:
-		var deltaT = gpsTime - lastSpoke;
-		log("gpsTime: " + gpsTime + ", deltaT: " + deltaT);
-		if(deltaT >= 10000) {
-			var distance = GeoCodeCalc.CalcDistance(prevLat, prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
-			log("distance: " + distance);
-			if(distance > 0.05) {
-				var url = "http://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json";
-				$.getJSON(url, function(data) {
-					log("jsonData: " + data);
-					var displayName = data.display_name;
-					log("displayName: " + data.display_name);
-					var displayNameStart = displayName;
-					// .split(",")[0];
-					tts.speak(displayNameStart, ttsSuccess, ttsFailed);
-					prevLat = lat;
-					prevLon = lon;
-					lastSpoke = gpsTime;
-					alert(data);
-				}, function(err) {
-					log("jsonFail: " + err);
-				});
-				lastSpoke = gpsTime;
-				log("queried at " + gpsTime);
-			} else {
-				log("not moved far enough");
-			}
-		} else {
-			log("not been long enough");
-		}
-	}
-
-	function onTap(e) {
-		if(lli >= latitudes.length) {
-			tts.speak("At end of route", ttsSuccess, ttsFailed);
-		} else {
-			var latitude = latitudes[lli];
-			var longitude = longitudes[lli];
-			log("lli:" + lli + ", lon:" + longitude + ", lat:" + latitude);
-			lli++;
-			var url = "http://nominatim.openstreetmap.org/reverse?lat=" + latitude + "&lon=" + longitude + "&format=json";
-			$.getJSON(url, function(data) {
-				var displayName = data.display_name;
-				log("displayName: " + data.display_name);
-				var displayNameStart = displayName.split(",")[0];
-				tts.speak(displayNameStart, ttsSuccess, ttsFailed);
-			});
-		}
-	}
-
-	function initGPS() {
-		var gpsOptions = {
-			enableHighAccuracy : true
-		};
-		//navigator.geolocation.watchPosition(gotGps, gpsError, gpsOptions);
-		latitudes = [];
-		longitudes = [];
-		lli = 0;
-
-		var lat0 = 51.52454555500299;
-		var lon0 = -0.09877452626824379;
-		var step = 0.0001;
-		for(var i = 0; i <= 20; i++) {
-			latitudes.push(lat0);
-			longitudes.push(lon0);
-			lat0 += step;
-		}
-
-		// Disabled manual steps to ease testing.
-		// latitudes.push(51.5241521); longitudes.push(-0.0989377);
-		// latitudes.push(51.5241982); longitudes.push(-0.0989615);
-		// latitudes.push(51.5242067); longitudes.push(-0.0989370);
-		// latitudes.push(51.5242152); longitudes.push(-0.0986890);
-		// latitudes.push(51.5242532); longitudes.push(-0.0987932);
-		// latitudes.push(51.5242601); longitudes.push(-0.0987955);
-		// latitudes.push(51.5242765); longitudes.push(-0.0987343);
-		// latitudes.push(51.5259560); longitudes.push(-0.0997050);
-		// latitudes.push(51.5259873); longitudes.push(-0.0995799);
-		// latitudes.push(51.5259954); longitudes.push(-0.0995397);
-		// latitudes.push(51.5260003); longitudes.push(-0.0997208);
-		// latitudes.push(51.5260271); longitudes.push(-0.0995512);
-	}
-
 	function initControls() {
-		$("#MainPage").on("tap", onTap);
+		$("#MainPage").on("tap", mockPositionner.onTap_TMP);
 	}
 
 	function onDeviceReady() {
 		log("onDeviceReady");
-		clearTimeout(notDeviceTimer);
+		if (notDeviceTimer) {
+			clearTimeout(notDeviceTimer);
+		}
 
+		posPoller = new posPollerModule.PosPoller();
+		mockPositionner = new posPollerModule.MockPositionner();
 		initSpeech();
-		initGPS();
+		posPoller.initPolling();
 		initControls();
+		log("onDeviceReady done");
 	}
 
 	function onNotDevice() {
@@ -191,4 +90,4 @@
 
 	exports.rnib.main = module;
 
-})(window, jQuery, rnib.tts, rnib.log.log, rnib.GeoCodeCalc);
+})(window, jQuery, rnib.tts, rnib.log.log, rnib.posPoller);

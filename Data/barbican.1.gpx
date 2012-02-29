@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gpx version="1.1" creator="VIM" xmlns="http://www.topografix.com/GPX/1/1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+
+	<name>Walking near SkillsMatter</name>
+	<wpt lat="51.52454555500299" lon="-0.09877452626824379">
+		<ele>2372</ele>
+		<name>Skills Matter</name>
+	</wpt>
+	<wpt lat="51.52022" lon="-0.09775">
+		<ele>2372</ele>
+		<name>Barbican underground</name>
+	</wpt>
+	<trk>
+		<name>Walking near Skills Matter</name>
+		<number>1</number>
+		<trkseg>
+			<trkpt lat="51.52452" lon="-0.09915"><ele>2376</ele><time>2011-02-13T10:00:00Z</time></trkpt>
+			<trkpt lat="51.52432" lon="-0.09915"><ele>2376</ele><time>2011-02-13T10:00:05Z</time></trkpt>
+			<trkpt lat="51.52412" lon="-0.09915"><ele>2376</ele><time>2011-02-13T10:00:10Z</time></trkpt>
+			<trkpt lat="51.52392" lon="-0.09905"><ele>2376</ele><time>2011-02-13T10:00:15Z</time></trkpt>
+			<trkpt lat="51.52372" lon="-0.09895"><ele>2376</ele><time>2011-02-13T10:00:20Z</time></trkpt>
+			<trkpt lat="51.52352" lon="-0.09885"><ele>2376</ele><time>2011-02-13T10:00:25Z</time></trkpt>
+			<trkpt lat="51.52332" lon="-0.09855"><ele>2376</ele><time>2011-02-13T10:00:30Z</time></trkpt>
+			<trkpt lat="51.52312" lon="-0.09825"><ele>2376</ele><time>2011-02-13T10:00:35Z</time></trkpt>
+			<trkpt lat="51.52292" lon="-0.09795"><ele>2376</ele><time>2011-02-13T10:00:40Z</time></trkpt>
+			<trkpt lat="51.52272" lon="-0.09775"><ele>2376</ele><time>2011-02-13T10:00:45Z</time></trkpt>
+			<trkpt lat="51.52252" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:00:50Z</time></trkpt>
+			<trkpt lat="51.52232" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:00:55Z</time></trkpt>
+
+			<trkpt lat="51.52212" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:00Z</time></trkpt>
+			<trkpt lat="51.52192" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:05Z</time></trkpt>
+			<trkpt lat="51.52172" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:10Z</time></trkpt>
+			<trkpt lat="51.52152" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:15Z</time></trkpt>
+			<trkpt lat="51.52132" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:20Z</time></trkpt>
+			<trkpt lat="51.52112" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:25Z</time></trkpt>
+			<trkpt lat="51.52092" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:30Z</time></trkpt>
+			<trkpt lat="51.52072" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:35Z</time></trkpt>
+			<trkpt lat="51.52052" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:40Z</time></trkpt>
+			<trkpt lat="51.52032" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:45Z</time></trkpt>
+			<trkpt lat="51.52012" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:50Z</time></trkpt>
+			<trkpt lat="51.51992" lon="-0.09755"><ele>2376</ele><time>2011-02-13T10:01:55Z</time></trkpt>
+		</trkseg>
+	</trk>
+</gpx>
+
