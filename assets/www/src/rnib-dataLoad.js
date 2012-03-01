@@ -1,4 +1,4 @@
-(function(exports, $, geo, log) {
+(function(exports, $, location, geo, log) {
 
 	var module = {};
 
@@ -16,34 +16,6 @@
 		return nodesToGoodWays[id];
 	}
 
-	function GoodNode(nodeSrc) {
-		this.nodeSrc = nodeSrc;
-		this.id = $(nodeSrc).attr("id");
-		/** private & lazy initialized. */
-		this._coordData = null;
-
-		this.getWays = function() {
-			return getWaysByNode(this.id);
-		};
-		/** Lazily defines coordinates. */
-		// TODO: Unit test
-		this.__defineGetter__("coordinates", function() {
-			if (this._coordData) {
-				return this._coordData;
-			}
-			var jqNode = $(nodeSrc);
-			var lat = parseFloat(jqNode.attr("lat"));
-			var lon = parseFloat(jqNode.attr("lon"));
-			this._coordData = new geo.GeoCoord(lat, lon);
-			return this._coordData;
-		});
-	}
-
-	function GoodWay(src, wayName) {
-		this.src = src;
-		this.name = wayName;
-	}
-
 	function buildWayIfNamed(waySource) {
 		var names = $(waySource).find("tag[k='name']");
 		if (!names || 0 === names.size()) {
@@ -52,7 +24,7 @@
 
 		var aName = $(names[0]).attr("v");
 		if (aName) {
-			return new GoodWay(waySource, aName);
+			return new location.GoodWay(waySource, aName);
 		} else {
 			return null;
 		}
@@ -68,17 +40,8 @@
 		module.map = map;
 		// bounds = $(map).find("bounds");
 
-		var c1 = 0;
-		$(map).find("node").each(function(i, nodeSrc) {
-			var goodNode = new GoodNode(nodeSrc);
-			var key = goodNode.id;
-			nodeById[key] = goodNode;
-			numberOfNodes++;
-			c1 = i;
-		});
-		log("last node processed: " + c1);
-
-		var c2 = 0;
+		log("Processing ways...");
+		var numWays = 0;
 		$(map).find("way").each(function(i, w) {
 			var goodWay = buildWayIfNamed(w);
 			if (goodWay) {
@@ -89,11 +52,22 @@
 					}
 					nodesToGoodWays[node].push(goodWay);
 				});
-				c2 = i;
+				numWays = i;
 			}
 		});
 
-		log("last way processed: " + c2 + ", calling dataLoadedCallback");
+		log("...finished processing " + numWays + " ways.\nProcessing nodes...");
+
+		var numNodes = 0;
+		$(map).find("node").each(function(i, nodeSrc) {
+			var nodeId = $(nodeSrc).attr("id");
+			var ways = getWaysByNode(nodeId);
+			var goodNode = new location.GoodNode(nodeSrc, ways);
+			nodeById[nodeId] = goodNode;
+			numberOfNodes++;
+			numNodes = i;
+		});
+		log("...finished processing " + numNodes  + " nodes, calling dataLoadedCallback");
 
 		dataLoadedCallback(map);
 	}
@@ -149,4 +123,4 @@
 	exports.rnib = exports.rnib || {};
 
 	exports.rnib.mapData = module;
-})(this, jQuery, rnib.geo, rnib.log.log);
+})(this, jQuery, rnib.location, rnib.geo, rnib.log.log);

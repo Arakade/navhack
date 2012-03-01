@@ -1,6 +1,7 @@
 ;(function(exports) {
 	var module = {};
 
+	// TODO: Switch rnib-geo to using GeoCodeCalc methods (better spherical mathematics) for bearing and distance.
 	module.GeoCoord = function(latitude, longitude) {
 		this.lat = latitude;
 		this.lon = longitude;

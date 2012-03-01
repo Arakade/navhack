@@ -10,10 +10,12 @@
 1.	Get basic version of existing code working on Android:
 	1.	DONE: Tidyup
 	1.	DONE: Get basics of what we had working OK
+	1.	DONE: Have updates prompted by change in sufficient time and distance.
 	1.	Get speech working consistently
-	1.	Speak pre-canned relevant proximal POI data (RK working on this)
+	1.	Get current 'way' (road, street, etc) from pre-canned data
+	1.	Get relevant proximal POI from pre-canned data
 	1.	Load POI data from server.
-	1.	Unify code (e.g. `GeoCoord` and `GoodNode`)
+	1.	Unify code (e.g. `GeoCoord`, `GoodNode`, `rnib-math.js`, `GeoCodeCalc.js`)
 	1.	Do a minimal amount of performance optimization?
 	1.	Present version to beta-testers
 	1.	...
@@ -84,7 +86,9 @@ Speaking undisplayed text on iOS
 
 # Dev notes
 
-## Code overview
+## Current code overview
+
+### Current modules, classes, etc
 
 *	`rnib.poi` (in `src/rnib-hack.js`) provides:
 	*	`rnib.poi.PointsOfInterestFinder` class which provides:
@@ -95,15 +99,57 @@ Speaking undisplayed text on iOS
 		*	`distanceTo()`
 *	TODO: (middle layer)
 	*	find nearest way to a lat+long
-*	`rnib.mapData` (`src/dataLoad.js`) Provides data loading and retrieval
+*	`rnib.mapData` (`src/rnib-dataLoad.js`) Provides data loading and retrieval
 	*	`registerDataLoadedCallback()`
 	*	`loadDataFor(lat-long-rect)`
-	*	`getNodeById()`
-	*	`getWaysByNode()`
-	*	TODO: `findNodeThat(filterFunction)`
+	*	`getNodeNearestLatLon(lat-lon)`: `GoodNode` (see below)
+	*	TODO-maybe: `findNodeThat(filterFunction)`
 
-`PointsOfInterestFinder` has good API but needs ...?
-Give lat + long.  Find nearest node on a way.  That node will hopefully have a name which is the street you're on.
+### Current flow
+
+*	`main.js` creates and starts a `PerUpdate` (`rnib-perUpdate.js`).  It...
+	*	registers a `PosPoller` (`rnib-posPoller.js`) to get updated when sufficient time and distance change
+	*	receives updated GPS position
+	*	Makes AJAX/JSON server call to get current location.  This needs changing to using cached version.
+	*	...?
+	*	Uses `rnib-dataLoad.js` to convert to:
+		*	ways (roads, streets, etc).
+		*	TODO: nearby POIs
+*
+
+### rnib-dataLoad.js
+
+Algorithm (from Steve):
+Given lat + long.  Find nearest node on a way.  That node will hopefully have a name which is the street you're on.
+
 1.	Go through all nodes, find least distant.
 1.	Once found, retrieve ways for this node.
 
+## Goal
+
+*	Periodically be given `Location` (built from lat+lon under the covers)
+*	`Location.getName()`
+*	`Location.isJunction()`
+*	`Location.getJunctionChoices()`
+*	`Location.getPOIList()` which gives `POI`
+	*	`POI.getLocation()` to call `.getName()`
+	*	`POI.getBearing()` (in degrees to pass to `GeoCodeCalc.toClock(degrees)` to speak)
+
+What is closest to this atm?  `PointOfInterest`, `GoodNode`, ?
+
+*	`points-of-interest.js` and `rnib-hack.js` (`PointsOfInterestFinder` and `PointOfInterest`) have nice API and will be great for server-mock in future but atm aren't complex enough.
+*	`GoodNode` is:
+	*	is currently most useful data
+	*	heavily tied to OSM data form
+	*	tightly integrated with `dataLoad.js` -- needs separating.
+	*	currently uses `geo.GeoCoord` from `rnib-geo.js` (not `GeoCodeCalc`)
+
+### PLAN
+
+1.	Refactor `GoodNode` out of `dataLoad.js` to create `Location` class:
+	1.	DONE: Refactor `GoodNode` out of `dataLoad.js` (test)
+	1.	Rename to `Location` (test)
+	1.	Add extra methods (see above)
+	1.	(and the rest!...)
+1.	Switch `PointsOfInterestFinder` to working with `Location` and/or `dataLoad.js`?  *or will the updater's needs affect how we do this?*
+1.	Switch `geo.GeoCoord` (`rnib-geo.js`) to using `GeoCodeCalc` and exposing appropriate methods.  Perhaps combine the two?

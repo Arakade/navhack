@@ -13,6 +13,7 @@
 		return module.ToRadian(v2) - module.ToRadian(v1);
 	};
 
+	// TODO: Resolve with rnib-math.js and rnib-geo.js
 	module.CalcDistance = function(lat1, lng1, lat2, lng2, radius) {
 		return radius * 2 * Math.asin(Math.min(1, Math.sqrt((Math.pow(Math.sin((module.DiffRadian(lat1, lat2)) / 2.0), 2.0) + Math.cos(module.ToRadian(lat1)) * Math.cos(module.ToRadian(lat2)) * Math.pow(Math.sin((module.DiffRadian(lng1, lng2)) / 2.0), 2.0) ))));
 	};
