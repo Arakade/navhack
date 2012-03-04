@@ -1,39 +1,96 @@
-;(function(exports, $, tts, log, perUpdateModule, mockPositionnerModule) {
+;(function(exports, $, tts, log, perUpdateModule, mapDataModule, mockPositionnerModule) {
 
 	var module = {};
 
 	var perUpdate,
 		mockPositionner = null;
-	var notDeviceTimer = null;
-	var saidHi = false;
 
-	function ttsSuccess(ret) {
-		log("speech worked: " + ret);
-	}
+	var readyCountdown;
+	function ReadyCountdown(moduleNames) {
+		var fullyReadyIfZero = moduleNames.length;
 
-	function ttsFailed(ret) {
-		log("speech failed: " + ret);
-		alert("speech failed: " + ret);
-	}
-
-	function sayHi() {
-		if(saidHi) {
-			return;
+		function removeModuleName(name) {
+			var i = moduleNames.indexOf(name);
+			if (-1 !== i) {
+				moduleNames.splice(i, 1);
+				log.log("ReadyCountDown: " + name + " ready.");
+			}
 		}
-		tts.speak("Hello to all at the Londroid R N I B Hack-a-thon", ttsSuccess, ttsFailed);
-		saidHi = true;
-	}
 
-	function initSpeech() {
-		var ttsLoaded = function(ret) {
-			sayHi();
-		};
-		var ttsLoadFailed = function(ret) {
-			alert("tts failed: " + ret);
-		};
+		function fullyReady() {
+			log.log("ReadyCountDown: fully ready");
+			perUpdate = new perUpdateModule.PerUpdate();
+			perUpdate.startReporting();
+			readyCountdown = null;
+		}
 
-		tts.init(ttsLoaded, ttsLoadFailed);
+		this.moreReady = function(whatIsDone) {
+			removeModuleName(whatIsDone);
+			if (!--fullyReadyIfZero) {
+				fullyReady();
+			} else {
+				log.log("ReadyCountDown: waiting for " + moduleNames);
+			}
+		};
 	}
+	readyCountdown = new ReadyCountdown(["DeviceInit", "InitTTS", "DataLoadInit"]);
+
+	// TEMPORARY: Data load will need to be triggered off GPS acquisition.  Here until proven.
+	var dataLoadInit;
+	function DataLoadInit() {
+		this.init = function() {
+			mapDataModule.registerDataLoadedCallback(function dataLoaded(map) {
+				readyCountdown.moreReady("DataLoadInit");
+				dataLoadInit = null;
+			});
+			var minLon = "unused", minLat = "unused", maxLon = "unused", maxLat = "unused";
+			mapDataModule.loadDataFor(minLon, minLat, maxLon, maxLat);
+		};
+	}
+	dataLoadInit = new DataLoadInit();
+
+	var ttsInit;
+	function InitTTS() {
+		var saidHi = false;
+
+		function ready() {
+			readyCountdown.moreReady("InitTTS");
+			ttsInit = null;
+		}
+
+		function ttsSuccess(ret) {
+			log.log("speech worked: " + ret);
+			ready();
+		}
+
+		function ttsFailed(ret) {
+			log.warn("speech failed: " + ret);
+			alert("speech failed: " + ret);
+			ttsInit = null;
+		}
+
+		function sayHi() {
+			if(saidHi) {
+				return;
+			}
+			saidHi = true;
+			tts.speak("Hello to all at the Londroid R N I B Hack-a-thon", ttsSuccess, ttsFailed); // callbacks ignored atm
+			ready(); // temp place since ttsSuccess isn't being called atm!
+		}
+
+		this.init = function() {
+			var ttsLoaded = function(ret) {
+				sayHi();
+			};
+			var ttsLoadFailed = function(ret) {
+				alert("tts failed: " + ret);
+				readyCountdown.moreReady("InitTTS"); // to allow browser-based testing
+			};
+
+			tts.init(ttsLoaded, ttsLoadFailed);
+		};
+	}
+	ttsInit = new InitTTS();
 
 	function beep() {
 		navigator.notification.beep(2);
@@ -51,43 +108,54 @@
 		$("#MainPage").on("tap", mockPositionner.onTap_TMP);
 	}
 
-	function onDeviceReady() {
-		log("onDeviceReady");
-		if (notDeviceTimer) {
-			clearTimeout(notDeviceTimer);
+	var deviceInit;
+	function DeviceInit() {
+		var notDeviceTimer = null;
+		function onDeviceReady() {
+			log.log("onDeviceReady");
+			if (notDeviceTimer) {
+				clearTimeout(notDeviceTimer);
+			}
+
+			mockPositionner = new mockPositionnerModule.MockPositionner();
+			ttsInit.init();
+			initControls();
+			log.log("onDeviceReady done");
+			readyCountdown.moreReady("DeviceInit");
+			deviceInit = null;
 		}
 
-		mockPositionner = new mockPositionnerModule.MockPositionner();
-		initSpeech();
-		initControls();
-		perUpdate = new perUpdateModule.PerUpdate(); // move into initSpeech() callback
-		perUpdate.startReporting();
-		log("onDeviceReady done");
-	}
+		function onNotDevice() {
+			log.warn("onNotDevice: calling onDeviceReady regardless for testing");
+			onDeviceReady();
+		}
 
-	function onNotDevice() {
-		log("onNotDevice: calling onDeviceReady regardless for testing");
-		onDeviceReady();
-	}
+		// Set timeout for this not being device to allow testing on webpage
+		// TODO: Find better way to do this.
+		function prepForNotDevice() {
+			log.log("prepForNotDevice");
+			notDeviceTimer = setTimeout(function(){onNotDevice();}, 3000);
+			log.log("notDeviceTimer:" + notDeviceTimer);
+		}
 
-	// Set timeout for this not being device to allow testing on webpage
-	// TODO: Find better way to do this.
-	function prepForNotDevice() {
-		log("prepForNotDevice");
-		notDeviceTimer = setTimeout(onNotDevice, 3000);
+		this.init = function() {
+			prepForNotDevice();
+			document.addEventListener("deviceready", onDeviceReady, true);
+		};
 	}
+	deviceInit = new DeviceInit();
 
 	module.init = function() {
-		prepForNotDevice();
 		// the next line makes it impossible to see Contacts on the HTC Evo since it
 		// doesn't have a scroll button
 		// document.addEventListener("touchmove", preventBehavior, false);
-		document.addEventListener("deviceready", onDeviceReady, true);
-		log("init done -- awaiting onDeviceReady");
+		deviceInit.init();
+		dataLoadInit.init();
+		log.log("init done -- awaiting onDeviceReady");
 	};
 
 	exports.rnib = exports.rnib || {};
 
 	exports.rnib.main = module;
 
-})(window, jQuery, rnib.tts, rnib.log.log, rnib.perUpdate, rnib.mockPositionner);
+})(window, jQuery, rnib.tts, rnib.log, rnib.perUpdate, rnib.mapData, rnib.mockPositionner);

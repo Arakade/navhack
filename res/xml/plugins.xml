@@ -5,6 +5,7 @@
     <plugin name="Device" value="com.phonegap.Device"/>
     <plugin name="Accelerometer" value="com.phonegap.AccelListener"/>
     <plugin name="Compass" value="com.phonegap.CompassListener"/>
+<!--
     <plugin name="Media" value="com.phonegap.AudioHandler"/>
     <plugin name="Camera" value="com.phonegap.CameraLauncher"/>
     <plugin name="Contacts" value="com.phonegap.ContactManager"/>
@@ -16,5 +17,6 @@
     <plugin name="Temperature" value="com.phonegap.TempListener"/>
     <plugin name="FileTransfer" value="com.phonegap.FileTransfer"/>
     <plugin name="Capture" value="com.phonegap.Capture"/>
+-->
     <plugin name="TTS" value="com.phonegap.plugins.speech.TTS"/>
 </plugins>

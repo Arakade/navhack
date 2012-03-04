@@ -1,5 +1,5 @@
 describe("dataLoad", function () {
-	var mapDataModule = rnib.mapDataModule;
+	var mapDataModule = rnib.mapData;
 
 	describe("loading data", function () {
 		console.log("in loading data function");
@@ -83,6 +83,34 @@ describe("dataLoad", function () {
 					expect(w1.name).toEqual("Old Street");
 				});
 			});
+
+			describe("should have", function() {
+				it("a named way", function() {
+					var n1 = mapDataModule.getNodeById("108417");
+					var w1 = n1.aNamedWay;
+					expect(w1.name).toEqual("Old Street");
+				});
+
+				it("a name (itself)", function() {
+					var n1 = mapDataModule.getNodeById("108417");
+					var aName = n1.aName;
+					expect(aName).toEqual("Old Street");
+				});
+
+				describe("its own name", function() {
+					it("on those that have it", function() {
+						var n1 = mapDataModule.getNodeById("292162858");
+						var ownName = n1.ownName;
+						expect(ownName).toEqual("Pizza Express");
+					});
+
+					it("null on those that don't have it", function() {
+						var n1 = mapDataModule.getNodeById("108417");
+						var ownName = n1.ownName;
+						expect(ownName).toBeUndefined();
+					});
+				});
+			});
 		});
 
 		describe("near a known location", function() {
@@ -108,6 +136,13 @@ describe("dataLoad", function () {
 				var n1Ways = n1.ways;
 				var w1 = n1Ways[0];
 				expect(w1.name).toEqual("Clerkenwell and Bunhill Wards Police Station");
+			});
+		});
+
+		describe("annoying values", function() {
+			it("should be fine", function() {
+				var n1 = mapDataModule.getNodeNearestLatLon(51.523718333333335, -0.09894833333333333);
+				expect(n1.aName).not.toBeNull();
 			});
 		});
 	});

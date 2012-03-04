@@ -2,6 +2,7 @@
 
 	var module = {};
 
+	var bounds = null;
 	var numberOfNodes = 0;
 	var nodeById = {};
 	var nodesToGoodWays = {};
@@ -24,7 +25,7 @@
 
 		var aName = $(names[0]).attr("v");
 		if (aName) {
-			return new location.GoodWay(waySource, aName);
+			return new location.Way(waySource, aName);
 		} else {
 			return null;
 		}
@@ -35,10 +36,26 @@
 		alert("onGetMapDataError: " + err.statusText);
 	}
 
+	function Bounds(map) {
+		var jqb = $(map).find("bounds");
+		var minLon = jqb.attr('minlon');
+		var maxLon = jqb.attr('maxlon');
+		var minLat = jqb.attr('minlat');
+		var maxLat = jqb.attr('maxlat');
+
+		this.contains = function(lat, lon) {
+			return (lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon);
+		};
+
+		this.toString = function() {
+			return "Bounds(min(" + minLat + "," + minLon + "), max(" + maxLat + "," + maxLon + "))";
+		};
+	}
+
 	/** Record loaded data into our internal datastructures. */
 	function onMapLoaded(map) {
 		module.map = map;
-		// bounds = $(map).find("bounds");
+		bounds = new Bounds(map);
 
 		log("Processing ways...");
 		var numWays = 0;
@@ -62,7 +79,7 @@
 		$(map).find("node").each(function(i, nodeSrc) {
 			var nodeId = $(nodeSrc).attr("id");
 			var ways = getWaysByNode(nodeId);
-			var goodNode = new location.GoodNode(nodeSrc, ways);
+			var goodNode = new location.Location(nodeSrc, ways);
 			nodeById[nodeId] = goodNode;
 			numberOfNodes++;
 			numNodes = i;
@@ -91,11 +108,16 @@
 	};
 
 	/**
-	 * Get the GoodNode nearest supplied latitude & longitude.
+	 * Get the Location nearest supplied latitude & longitude.
 	 * API allows for null if no node near but present implementation always returns an instance.
 	 */
 	// TODO: Recommend background thread to do this? (computationally expensive until spatial data-structure used)
 	module.getNodeNearestLatLon = function(lat, lon) {
+		if (!bounds.contains(lat, lon)) {
+			// TODO: If lat,lon are outside current bounds, load new data and redo.
+			throw new Error("outside loaded bounds! (" + lat + "," + lon + ") outside " + bounds);
+		}
+
 		var d = 9999999999999;
 		var i = 0;
 		var targetCoords = new geo.GeoCoord(lat, lon);
@@ -103,6 +125,10 @@
 		for (var id in nodeById) {
 			if (nodeById.hasOwnProperty(id)) {
 				var n = nodeById[id];
+				// skip unnamed
+				if (!n.aName) {
+					continue;
+				}
 				var ds = n.coordinates.distanceTo(targetCoords);
 				if (ds < d) {
 					d = ds;
@@ -115,7 +141,7 @@
 		return closestNode;
 	};
 
-	/** Get a GoodNode by node ID or null if ID unknown. */
+	/** Get a Location by node ID or null if ID unknown. */
 	module.getNodeById = function(id) {
 		return nodeById[id];
 	};
@@ -124,3 +150,4 @@
 
 	exports.rnib.mapData = module;
 })(this, jQuery, rnib.location, rnib.geo, rnib.log.log);
+

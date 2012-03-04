@@ -20,18 +20,16 @@
 	PerUpdate.method('retrieveAndReportLocation', function(p, updater) {
 		var lat = p.coords.latitude;
 		var lon = p.coords.longitude;
-		var url = "http://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json";
 		// TODO: recordPending() + get handle from getJSON() call below
-		$.getJSON(url, function(data) {
-			log.log("jsonData: " + data);
-			var displayName = data.display_name;
-			log.info("displayName: " + data.display_name);
-			var displayNameStart = displayName.split(",")[0];
-			tts.speak(displayNameStart, ttsSuccess, ttsFailed);
-			updater.recordReported(p, new Date()); // if recording last update manually
-		}.bind(this), function(err) {
-			log.error("jsonERR: " + err);
-		}.bind(this));
+		try {
+			var here = rnib.mapData.getNodeNearestLatLon(lat, lon);
+			log.log("location: " + here);
+			var aName = here.aName;
+			tts.speak(aName, ttsSuccess, ttsFailed);
+		} catch (err) {
+			log.error("failed to get location: " + err);
+		}
+		updater.recordReported(p, new Date()); // if recording last update manually
 	});
 
 	PerUpdate.method('startReporting', function() {

@@ -6,6 +6,10 @@
 		this.lat = latitude;
 		this.lon = longitude;
 
+		this.toString = function() {
+			return "(" + latitude + "," + longitude + ")";
+		};
+
 		this.bearingTo = function(other) {
 			var lat1 = this.lat,
 				lon1 = this.lon,

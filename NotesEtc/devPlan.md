@@ -5,14 +5,18 @@
 1.	Server use discussion
 1.	Client-side technology discussion
 
-# Short term development plan
+________________________________
+
+# Short term high-level development plan
+
+(see also detailed dev plan below)
 
 1.	Get basic version of existing code working on Android:
 	1.	DONE: Tidyup
 	1.	DONE: Get basics of what we had working OK
 	1.	DONE: Have updates prompted by change in sufficient time and distance.
-	1.	Get speech working consistently
-	1.	Get current 'way' (road, street, etc) from pre-canned data
+	1.	DONE: Get speech working consistently
+	1.	1/2: Get current 'way' (road, street, etc) from pre-canned data
 	1.	Get relevant proximal POI from pre-canned data
 	1.	Load POI data from server.
 	1.	Unify code (e.g. `GeoCoord`, `GoodNode`, `rnib-math.js`, `GeoCodeCalc.js`)
@@ -24,7 +28,9 @@
 	1.	Consider moving data manipulation to server.
 		(see "server use discussion" section for more details)
 
-# Potential data sources
+________________________________
+
+# Data source potentials
 
 *	Map-like
 	*	Open Street Map
@@ -42,22 +48,194 @@
 
 ### Data description
 
+[Nodes, Ways, Relations introduction](http://wiki.openstreetmap.org/wiki/Data_Primitives). (_)
+
 *	bounds
 	*	Lat+Long bounds of these XML data.
 *	nodes = geographic points
 	*	Mostly these are geographical points _but lack other semantic data (TBC)_.
 	*	_Some_ have names, etc.
-*	ways = Roads, etc
+*	ways = Roads, walkways, areas, roundabouts, etc
 	*	Some have name (e.g. of the road they represent)
 	*	Defined as 2+ nodes.
 *	relations
 	*	define things like bus routes.  Unused by us at this time.
 
-# Server use discussion
+________________________________
 
-Intend to process data sources on a server and make these available to the client(s) in a consistent API and data format (at least as far as possible).
-Will need to provide it for offline use.
-If we end up using a JavaScript-based client, we may consider using NodeJS on the server.
+# Dev notes
+
+## Classes
+
+(including future classes)
+
+### LocationServiceManager class
+
+*	provides main API for app to do its job.
+*	a Facade which abstracts single or multiple `LocationProvider`s (e.g. `LocationProvicerOSM`).
+*	(perhaps adapt `PointsOfInterestFinder` into this)
+*	provides a callback interface that provides a `Location` instance
+	Likely `LocationServiceManager.registerLocationListener(function locationListener(Location))`
+
+
+### Location class
+
+*	Build a `Location` class that is returned each position update that holds all data for operations.
+	Generally has:
+	*	info about current location (including nearest 'thing')
+	*	set of nearby POIs (TODO: perhaps each POI is/has a `Location`?)
+	*	whether at a junction and what choices
+	*	later ability to be merged (so `Location`s from multiple `LocationProvicer`s can be combined for supplying to the app.)
+*	So `Location` should have:
+	*	self info:
+		*	`getAName()` gets an arbitrary 'best guess' name
+			(for OSM: maybe from a `Node`, probably from an arbitrary `Way`)
+		*	`getTypes()` which returns a list of types for this Location (street, streetPart, building, ...)
+		*	`getTypeValue(type)` gives the value for the supplied `type` (or null if unknown)
+		*	`getTypeName(type)` gives the name  for the supplied `type` (or null if no name or unknown type)
+	*	POI info:
+		`getPOIList()` which gives `POI`
+		*	`POI.getLocation()` to call `.getName()`
+		*	`POI.getRange()` distance from providing `Location`
+		*	`POI.getBearing()` (in degrees to pass to `GeoCodeCalc.toClock(degrees)` to speak)
+	*	junction info:
+		*	`isJunction()`
+		*	`getJunctionChoices()`
+	*	`mergeWith(Location)`
+		Merges another `Location` with this one.
+
+### LocationProvider class
+
+*	Given a lat+lon, provides a `Location` in async API (specifically to allow server calls).  Abstracts server calls and caching.
+	Likely `LocationProvider.getUpdate(lat, lon, function successCallback(Location), function failureCallback(error))`
+
+## OSMLocationProvider : OSM data loading
+
+(Currently implemented in `rnib-dataLoad.js` but needs to be modified to implement the unifying `LocationProvider` interface.)
+
+Algorithm (from Steve):
+Given lat + long.  Find nearest node on a way.  That node will hopefully have a name which is the street you're on.
+
+Perhaps better, get all nodes within radius then apply certain filters (e.g. highways).
+
+Algorithm plan:
+
+*	`classifyGeneral(way|node)`:
+	1.	iterate through `tag`s
+		1.	for a given type (`k`), take a specified action:
+			*	If `visible == false`, skip.
+			*	If unnamed, skip. (TODO: reasonable?)
+			*	If `isTransportWay(way)`...
+				*	See [OSM Key:highway](http://wiki.openstreetmap.org/wiki/Key:highway)
+				*	`highway`: check value and likely treat as road
+				*	Does `addr:street` imply building-on-road rather than road itself?
+			*	Building:
+				*	`building=yes`
+				*	`addr:housename` or `addr:housenumber`, treat as streetPart
+				*	... TODO
+			*	Junction:
+				*	See [OSM Key:junction](http://wiki.openstreetmap.org/wiki/Key:junction)
+					**Note, not always present for junctions (more often not!)**
+				*	A junction is also a node shared by multiple road-like ways.
+			*	Crossing:
+				*	See [OSM Key:crossing](http://wiki.openstreetmap.org/wiki/Key:crossing)
+				*	E.g. `crossing="uncontrolled", crossing_ref="zebra", highway="crossing"` (_)
+			*	Others TODO:
+				*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** !
+				*	Interesting items from OSM's [Keys list](http://wiki.openstreetmap.org/wiki/Category:Keys) and [En:Keys list](http://wiki.openstreetmap.org/wiki/Category:En:Keys)
+1.	On data-load:
+	1.	Pre-process all nodes for fast access by rest of algorithm and...
+		1.	`nodeType = classify(way)`
+	1.	Iterate through ways.  For each...
+		1.	`wayType = classifyWay(way)` (way-specific classification using `classifyGeneral()` for some)
+			1.	call `classifyGeneral()` and return answer if given.  Otherwise...
+			1.	iterate through `tag`s
+				1.	for a given type (`k`), take a specified action:
+					*	If `visible == false`, skip.
+					*	If unnamed, skip. (TODO: reasonable?)
+					*	If `isTransportWay(way)`...
+						*	See [OSM Key:highway](http://wiki.openstreetmap.org/wiki/Key:highway)
+						*	`highway`: check value and likely treat as road
+						*	Does `addr:street` imply building-on-road rather than road itself?
+					*	Crossing:
+						*	See [OSM Key:crossing](http://wiki.openstreetmap.org/wiki/Key:crossing)
+						*	E.g. `crossing="uncontrolled", crossing_ref="zebra", highway="crossing"`
+					*	Others TODO:
+						*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** ! (_)
+						*	Interesting items from
+		1.	If way of interest... (`switch(wayType)`)
+			1.	add way to member nodes
+			1.	Ways to treat things:
+				*	road-like:
+					1.	add referenced nodes to `nodesOnRoads`.
+						(Perhaps record those ways' names against the node?  DONE-ish)
+						If already on a road, this is a junction!
+					1.	(later rank roads since some more useful to know than others)
+				*	streetPart: (some individually-identifiable part of street (e.g. has name or number))
+					1.	record nodes of this way
+					1.	... TODO
+				*	... TODO
+1.	On lat+lon request:
+	1.	Find current road:
+		1.	Go through all `nodesOnRoads`, find least distant.
+	1.	Find points of interest:
+		1.	... TODO
+
+## Current code overview
+
+### Current modules, classes, etc
+
+*	`rnib.poi` (in `src/rnib-hack.js`) provides:
+	*	`rnib.poi.PointsOfInterestFinder` class which provides:
+		*	`getPointsOfInterest()`
+		*	`getCurrentLocation()`
+	*	`rnib.poi.GeoCoord` class which provides:
+		*	`bearingTo()`
+		*	`distanceTo()`
+*	TODO: (middle layer)
+	*	find nearest way to a lat+long
+*	`rnib.mapData` (`src/rnib-dataLoad.js`) Provides data loading and retrieval
+	*	`registerDataLoadedCallback()`
+	*	`loadDataFor(lat-long-rect)`
+	*	`getNodeNearestLatLon(lat-lon)`: `Location` (see below)
+	*	TODO-maybe: `findNodeThat(filterFunction)`
+
+### Current code flow
+
+*	`main.js` creates and starts a `PerUpdate` (`rnib-perUpdate.js`).  It...
+	*	registers a `PosPoller` (`rnib-posPoller.js`) to get updated when sufficient time and distance change
+	*	receives updated GPS position
+	*	Makes AJAX/JSON server call to get current location.  This needs changing to using cached version.
+	*	...?
+	*	Uses `rnib-dataLoad.js` to convert to:
+		*	ways (roads, streets, etc).
+		*	TODO: nearby POIs
+*
+
+## Reality-Plan gap
+
+In current code, what is closest to above plan?  (`PointOfInterest`, `GoodNode`, ?)
+
+*	`points-of-interest.js` and `rnib-hack.js` (`PointsOfInterestFinder` and `PointOfInterest`) have nice API and will be great for server-mock in future but atm aren't complex enough.
+*	`GoodNode` is:
+	*	is currently most useful data
+	*	heavily tied to OSM data form
+	*	tightly integrated with `dataLoad.js` -- needs separating.
+	*	currently uses `geo.GeoCoord` from `rnib-geo.js` (not `GeoCodeCalc`)
+
+## PLAN
+
+1.	Refactor `GoodNode` out of `dataLoad.js` to create `Location` class:
+	1.	DONE: Refactor `GoodNode` out of `dataLoad.js` (test)
+	1.	DONE: Rename to `Location` (test)
+	1.	DONE: Call `mapDataModule.getNodeNearestLatLon(lat, lon)` from `perUpdate` instead of AJAX/JSON
+	1.	Implement "Data loading" algorithm (above)
+	1.	Add extra methods (see above)
+	1.	(and the rest!...)
+1.	Switch `PointsOfInterestFinder` to working with `Location` and/or `dataLoad.js`?  *or will the updater's needs affect how we do this?*
+1.	Switch `geo.GeoCoord` (`rnib-geo.js`) to using `GeoCodeCalc` and exposing appropriate methods.  Perhaps combine the two?
+
+________________________________
 
 # Client-side technology discussion
 
@@ -78,78 +256,14 @@ Concerns over sufficiency:
 1.	Performance?
 1.	Developer productivity
 
-### PhoneGap tech investigations
+### How to speak text on iOS
 
-Speaking undisplayed text on iOS
-[From native code](http://arstechnica.com/apple/guides/2010/02/iphone-voiceservices-looking-under-the-hood.ars/)
+Specifically undisplayed text.  Perhaps [from native code](http://arstechnica.com/apple/guides/2010/02/iphone-voiceservices-looking-under-the-hood.ars/)?
 
+________________________________
 
-# Dev notes
+# Server use discussion
 
-## Current code overview
-
-### Current modules, classes, etc
-
-*	`rnib.poi` (in `src/rnib-hack.js`) provides:
-	*	`rnib.poi.PointsOfInterestFinder` class which provides:
-		*	`getPointsOfInterest()`
-		*	`getCurrentLocation()`
-	*	`rnib.poi.GeoCoord` class which provides:
-		*	`bearingTo()`
-		*	`distanceTo()`
-*	TODO: (middle layer)
-	*	find nearest way to a lat+long
-*	`rnib.mapData` (`src/rnib-dataLoad.js`) Provides data loading and retrieval
-	*	`registerDataLoadedCallback()`
-	*	`loadDataFor(lat-long-rect)`
-	*	`getNodeNearestLatLon(lat-lon)`: `GoodNode` (see below)
-	*	TODO-maybe: `findNodeThat(filterFunction)`
-
-### Current flow
-
-*	`main.js` creates and starts a `PerUpdate` (`rnib-perUpdate.js`).  It...
-	*	registers a `PosPoller` (`rnib-posPoller.js`) to get updated when sufficient time and distance change
-	*	receives updated GPS position
-	*	Makes AJAX/JSON server call to get current location.  This needs changing to using cached version.
-	*	...?
-	*	Uses `rnib-dataLoad.js` to convert to:
-		*	ways (roads, streets, etc).
-		*	TODO: nearby POIs
-*
-
-### rnib-dataLoad.js
-
-Algorithm (from Steve):
-Given lat + long.  Find nearest node on a way.  That node will hopefully have a name which is the street you're on.
-
-1.	Go through all nodes, find least distant.
-1.	Once found, retrieve ways for this node.
-
-## Goal
-
-*	Periodically be given `Location` (built from lat+lon under the covers)
-*	`Location.getName()`
-*	`Location.isJunction()`
-*	`Location.getJunctionChoices()`
-*	`Location.getPOIList()` which gives `POI`
-	*	`POI.getLocation()` to call `.getName()`
-	*	`POI.getBearing()` (in degrees to pass to `GeoCodeCalc.toClock(degrees)` to speak)
-
-What is closest to this atm?  `PointOfInterest`, `GoodNode`, ?
-
-*	`points-of-interest.js` and `rnib-hack.js` (`PointsOfInterestFinder` and `PointOfInterest`) have nice API and will be great for server-mock in future but atm aren't complex enough.
-*	`GoodNode` is:
-	*	is currently most useful data
-	*	heavily tied to OSM data form
-	*	tightly integrated with `dataLoad.js` -- needs separating.
-	*	currently uses `geo.GeoCoord` from `rnib-geo.js` (not `GeoCodeCalc`)
-
-### PLAN
-
-1.	Refactor `GoodNode` out of `dataLoad.js` to create `Location` class:
-	1.	DONE: Refactor `GoodNode` out of `dataLoad.js` (test)
-	1.	Rename to `Location` (test)
-	1.	Add extra methods (see above)
-	1.	(and the rest!...)
-1.	Switch `PointsOfInterestFinder` to working with `Location` and/or `dataLoad.js`?  *or will the updater's needs affect how we do this?*
-1.	Switch `geo.GeoCoord` (`rnib-geo.js`) to using `GeoCodeCalc` and exposing appropriate methods.  Perhaps combine the two?
+Intend to process data sources on a server and make these available to the client(s) in a consistent API and data format (at least as far as possible).
+Will need to provide it for offline use.
+If we end up using a JavaScript-based client, we may consider using NodeJS on the server.
