@@ -1,7 +1,7 @@
 (function(exports, $, geo, log) {
 
 	var module = {};
-	var DEBUG = false;
+	var DEBUG = true;
 
 	function initCoordData(nodeSrc) {
 		var jqNode = $(nodeSrc);
@@ -10,46 +10,56 @@
 		return new geo.GeoCoord(lat, lon);
 	}
 
-	module.Location = function Location(nodeSrc, theWays) {
-		// this.nodeSrc = nodeSrc;
-		var id = $(nodeSrc).attr("id");
+	/**
+	 * @param src xml data reference.
+	 * @param {Object} attributes Map of member data.
+	 * @constructor
+	 */
+	module.Location = function Location(src, attributes) {
+		var that = this;
+		this.attributes = attributes;
+		this.id = $(src).attr("id");
+		var _ways = [];
 		var namedWay = null;
 		var coordData = null;
-		var _ownName = null;
 
 		this.__defineGetter__("coordinates", function() {
 			if (!coordData) {
-				coordData = initCoordData(nodeSrc);
+				coordData = initCoordData(src);
 			}
 			return coordData;
 		});
 
 		this.__defineGetter__("ownName", function() {
-			if (!_ownName) {
-				_ownName = $(nodeSrc).find("tag[k='name']").attr("v");
-			}
-			return _ownName;
+			return attributes.name;
 		});
 
+		/**
+		 * Explicitly not a setter to prevent accidental assignment.
+		 */
+		this.addWay = function(newWay) {
+			_ways.push(newWay);
+		};
+
 		this.__defineGetter__("ways", function() {
-			return theWays;
+			return _ways;
 		});
 
 		// To use from logging.  MUST NOT call anything that logs!
 		function internalToString(extraString) {
-			return "Location(id:" + id + ", coordinates:" + this.coordinates + extraString + ")";
+			return "Location(id:" + that.id + ", coordinates:" + that.coordinates + extraString + ")";
 		}
 
 		function findANamedWay() {
-			if (!theWays) {
+			if (!that.ways) {
 				if (DEBUG) {
 					log.warn("No ways on " + internalToString(''));
 				}
 				return null;
 			}
-			var numWays = theWays.length;
+			var numWays = that.ways.length;
 			for (var i = 0; i < numWays; i++) {
-				var w = theWays[i];
+				var w = that.ways[i];
 				if (w.name) {
 					return w;
 				}
@@ -65,12 +75,12 @@
 		});
 
 		this.__defineGetter__("aName", function() {
-			var name1 = this.ownName;
+			var name1 = that.ownName;
 			if (name1) {
 				return name1;
 			}
 
-			var aWay = this.aNamedWay;
+			var aWay = that.aNamedWay;
 			if (aWay) {
 				return aWay.name;
 			} else {
@@ -79,16 +89,37 @@
 		});
 
 		this.toString = function() {
-			return internalToString(", name:" + this.aName);
+			return internalToString(", name:" + that.aName);
 		};
 	};
 
-	module.Way = function Way(src, wayName) {
+	/**
+	 * @param src xml data reference.
+	 * @param {Object} attributes Map of member data.
+	 * @constructor
+	 */
+	module.Way = function Way(src, attributes) {
+		var that = this;
+		var _locations = [];
+
 		this.src = src;
-		this.name = wayName;
+		this.attributes = attributes;
+		this.id = $(src).attr("id");
+
+		this.__defineGetter__("name", function() {
+			return attributes.name;
+		});
+
+		this.addLocation = function(l) {
+			_locations.push(l);
+		};
+
+		this.__defineGetter__("locations", function() {
+			return _locations;
+		});
 
 		this.toString = function() {
-			return "Way(" + wayName + ")";
+			return "Way(" + that.name + ")";
 		};
 	};
 

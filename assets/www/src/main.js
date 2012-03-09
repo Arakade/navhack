@@ -4,6 +4,7 @@
 
 	var perUpdate,
 		mockPositionner = null;
+	var locationProvider;
 
 	var readyCountdown;
 	function ReadyCountdown(moduleNames) {
@@ -19,7 +20,7 @@
 
 		function fullyReady() {
 			log.log("ReadyCountDown: fully ready");
-			perUpdate = new perUpdateModule.PerUpdate();
+			perUpdate = new perUpdateModule.PerUpdate(locationProvider);
 			perUpdate.startReporting();
 			readyCountdown = null;
 		}
@@ -39,12 +40,13 @@
 	var dataLoadInit;
 	function DataLoadInit() {
 		this.init = function() {
-			mapDataModule.registerDataLoadedCallback(function dataLoaded(map) {
+			locationProvider = new mapDataModule.LocationProviderOSM();
+			locationProvider.TEMP_LOAD(function dataLoaded(result) {
 				readyCountdown.moreReady("DataLoadInit");
 				dataLoadInit = null;
+			}, function(err){
+				log.error("loadSegmentFor(): error:" + err);
 			});
-			var minLon = "unused", minLat = "unused", maxLon = "unused", maxLat = "unused";
-			mapDataModule.loadDataFor(minLon, minLat, maxLon, maxLat);
 		};
 	}
 	dataLoadInit = new DataLoadInit();

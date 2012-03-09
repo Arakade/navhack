@@ -16,9 +16,10 @@ ________________________________
 	1.	DONE: Get basics of what we had working OK
 	1.	DONE: Have updates prompted by change in sufficient time and distance.
 	1.	DONE: Get speech working consistently
-	1.	1/2: Get current 'way' (road, street, etc) from pre-canned data
+	1.	DONE: Get current location (road, street, etc) from pre-canned data
 	1.	Get relevant proximal POI from pre-canned data
-	1.	Load POI data from server.
+	1.	Add junction behaviour (detect junction and speak options).
+	1.	Load data from server.
 	1.	Unify code (e.g. `GeoCoord`, `GoodNode`, `rnib-math.js`, `GeoCodeCalc.js`)
 	1.	Do a minimal amount of performance optimization?
 	1.	Present version to beta-testers
@@ -72,15 +73,20 @@ ________________________________
 ### LocationServiceManager class
 
 *	provides main API for app to do its job.
-*	a Facade which abstracts single or multiple `LocationProvider`s (e.g. `LocationProvicerOSM`).
 *	(perhaps adapt `PointsOfInterestFinder` into this)
-*	provides a callback interface that provides a `Location` instance
+*	provides a callback interface that periodically provides a `Location` instance with all info for app to work with (see below).
 	Likely `LocationServiceManager.registerLocationListener(function locationListener(Location))`
+*	a Facade which abstracts single or multiple `LocationProvider`s (e.g. `LocationProviderOSM`).
 
+### LocationProvider class
+
+*	Provider class used by `LocationServiceManager`
+*	Given a lat+lon, provides a `Location` in async API (specifically to allow server calls).  Abstracts server calls and caching.
+	`LocationProvider.findPlaceNear(GeoCoord, function successCallback(Location), function failureCallback(error))`
 
 ### Location class
 
-*	Build a `Location` class that is returned each position update that holds all data for operations.
+*	Represents a `Location` that is returned each position update that holds all data for operations.
 	Generally has:
 	*	info about current location (including nearest 'thing')
 	*	set of nearby POIs (TODO: perhaps each POI is/has a `Location`?)
@@ -90,9 +96,10 @@ ________________________________
 	*	self info:
 		*	`getAName()` gets an arbitrary 'best guess' name
 			(for OSM: maybe from a `Node`, probably from an arbitrary `Way`)
-		*	`getTypes()` which returns a list of types for this Location (street, streetPart, building, ...)
-		*	`getTypeValue(type)` gives the value for the supplied `type` (or null if unknown)
-		*	`getTypeName(type)` gives the name  for the supplied `type` (or null if no name or unknown type)
+		*	Maybe...
+			*	_`getTypes()` which returns a list of types for this Location (street, streetPart, building, ...)_
+			*	_`getTypeValue(type)` gives the value for the supplied `type` (or null if unknown)_
+			*	_`getTypeName(type)` gives the name  for the supplied `type` (or null if no name or unknown type)_
 	*	POI info:
 		`getPOIList()` which gives `POI`
 		*	`POI.getLocation()` to call `.getName()`
@@ -104,14 +111,9 @@ ________________________________
 	*	`mergeWith(Location)`
 		Merges another `Location` with this one.
 
-### LocationProvider class
-
-*	Given a lat+lon, provides a `Location` in async API (specifically to allow server calls).  Abstracts server calls and caching.
-	Likely `LocationProvider.getUpdate(lat, lon, function successCallback(Location), function failureCallback(error))`
-
 ## OSMLocationProvider : OSM data loading
 
-(Currently implemented in `rnib-dataLoad.js` but needs to be modified to implement the unifying `LocationProvider` interface.)
+(Currently implemented in `rnib-dataLoad.js` but implements the unifying `LocationProvider` interface.)
 
 Algorithm (from Steve):
 Given lat + long.  Find nearest node on a way.  That node will hopefully have a name which is the street you're on.
@@ -120,66 +122,66 @@ Perhaps better, get all nodes within radius then apply certain filters (e.g. hig
 
 Algorithm plan:
 
-*	`classifyGeneral(way|node)`:
-	1.	iterate through `tag`s
-		1.	for a given type (`k`), take a specified action:
-			*	If `visible == false`, skip.
-			*	If unnamed, skip. (TODO: reasonable?)
-			*	If `isTransportWay(way)`...
-				*	See [OSM Key:highway](http://wiki.openstreetmap.org/wiki/Key:highway)
-				*	`highway`: check value and likely treat as road
-				*	Does `addr:street` imply building-on-road rather than road itself?
-			*	Building:
-				*	`building=yes`
-				*	`addr:housename` or `addr:housenumber`, treat as streetPart
-				*	... TODO
-			*	Junction:
-				*	See [OSM Key:junction](http://wiki.openstreetmap.org/wiki/Key:junction)
-					**Note, not always present for junctions (more often not!)**
-				*	A junction is also a node shared by multiple road-like ways.
-			*	Crossing:
-				*	See [OSM Key:crossing](http://wiki.openstreetmap.org/wiki/Key:crossing)
-				*	E.g. `crossing="uncontrolled", crossing_ref="zebra", highway="crossing"` (_)
-			*	Others TODO:
-				*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** !
-				*	Interesting items from OSM's [Keys list](http://wiki.openstreetmap.org/wiki/Category:Keys) and [En:Keys list](http://wiki.openstreetmap.org/wiki/Category:En:Keys)
-1.	On data-load:
-	1.	Pre-process all nodes for fast access by rest of algorithm and...
-		1.	`nodeType = classify(way)`
-	1.	Iterate through ways.  For each...
-		1.	`wayType = classifyWay(way)` (way-specific classification using `classifyGeneral()` for some)
-			1.	call `classifyGeneral()` and return answer if given.  Otherwise...
-			1.	iterate through `tag`s
-				1.	for a given type (`k`), take a specified action:
-					*	If `visible == false`, skip.
-					*	If unnamed, skip. (TODO: reasonable?)
-					*	If `isTransportWay(way)`...
-						*	See [OSM Key:highway](http://wiki.openstreetmap.org/wiki/Key:highway)
-						*	`highway`: check value and likely treat as road
-						*	Does `addr:street` imply building-on-road rather than road itself?
-					*	Crossing:
-						*	See [OSM Key:crossing](http://wiki.openstreetmap.org/wiki/Key:crossing)
-						*	E.g. `crossing="uncontrolled", crossing_ref="zebra", highway="crossing"`
-					*	Others TODO:
-						*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** ! (_)
-						*	Interesting items from
-		1.	If way of interest... (`switch(wayType)`)
-			1.	add way to member nodes
-			1.	Ways to treat things:
-				*	road-like:
-					1.	add referenced nodes to `nodesOnRoads`.
-						(Perhaps record those ways' names against the node?  DONE-ish)
-						If already on a road, this is a junction!
-					1.	(later rank roads since some more useful to know than others)
-				*	streetPart: (some individually-identifiable part of street (e.g. has name or number))
-					1.	record nodes of this way
-					1.	... TODO
-				*	... TODO
+General technique:
+
+On data load, process loaded data (from XML) into forms that provide fast access for lat+lon requests.
+This initially includes categorizing types of data (e.g. places, pointsOnRoads).  Later we'll likely add spatial data-structure and/or persisting our processed version.
+First follows a description of the algorithm to do this categorizing:
+
+*	`updateAttributesFrom()` builds `attributes` map from OSM `tag` `k` to `v` for use by other operations.
+*	Define 3 (future 4 inc. `relation`s) types of classifier, 1 each for Locations, Ways and both (general cases).  These iterate through `attributes` (and other info on the subject) to take appropriate actions.
+	*	general case:
+		*	If `visible == false`, skip everything.  TODO: Can also be an attribute on a node (and others?).
+	*	`Location` case: _(n.b. do not skip unnamed since needed for way processing.)_
+		*	Building:
+			*	`building=yes` --> `places`
+			*	`addr:housename` or `addr:housenumber`, --> `locationsOnRoads`
+		*	Junction:
+			*	See [OSM Key:junction](http://wiki.openstreetmap.org/wiki/Key:junction)
+				**Note, not always present for junctions (more often not!)**
+			*	A junction is also a node shared by multiple road-like ways.  However rather than forcing post-processing, `Location.addToRoad(Way)` does it on-the-fly.
+		*	Crossing:
+			*	See [OSM Key:crossing](http://wiki.openstreetmap.org/wiki/Key:crossing)
+			*	E.g. `crossing="uncontrolled", crossing_ref="zebra", highway="crossing"` (_)
+		*	Others TODO:
+			*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** !
+			*	Interesting items from OSM's [Keys list](http://wiki.openstreetmap.org/wiki/Category:Keys) and [En:Keys list](http://wiki.openstreetmap.org/wiki/Category:En:Keys)
+	*	`Way` case:
+		*	If unnamed, skip.
+		*	If `isTransportWay(way)`...
+			*	See [OSM Key:highway](http://wiki.openstreetmap.org/wiki/Key:highway)
+				`highway`: check value and likely treat as road
+			*	If true,
+				1.	add `Location`s the way references to `locationsOnRoads`.
+					Record those ways' names against the node?
+					If already on a road, this is a junction!  **TODO:* Calling `Location.addToRoad()` a second time causes junction recording.
+				1.	(later rank roads since some more useful to know than others)
+		*	Building:
+			*	`addr:street` implies building-on-road rather than road itself?
+			*	For each member `Location`:
+				*	Record in `Location` that is a member of a `Way` (to find later)
+				*	Add all `Location`s to --> `locationsOnRoads`
+				*	If usefully named, add all `Location`s --> `places`
+		*	Others TODO:
+			*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** !
+			*	Interesting items from
+
+So algorithm breaks into 2 parts: (1) data-load and (2) on lat+lon request:
+
+1.	On data-load, pre-process all nodes for fast access during lat+lon request:
+	1.	Process XML nodes into `Location`s for rest of algorithm including extracting attributes then categorize `Location`s
+	1.	Process XML ways into `Way`s including extracting attributes and cross-registering `Way` and `Location` connections then categorize `Way`s (including junction registration).
 1.	On lat+lon request:
-	1.	Find current road:
-		1.	Go through all `nodesOnRoads`, find least distant.
+	1.	Find current place on road:
+		1.	Go through all `locationsOnRoads`, find least distant.
+		1.	_? Check whether `Location` is a member of a `Way` as a building / road ?_
 	1.	Find points of interest:
-		1.	... TODO
+		1.	Search `places` for being within search radius
+		1.	For those found, `Location` will appropriately proxy information from the `Way`.
+		1.	De-dup discovered `Location`s:
+			1.	by closest proximity (multiple `Location`s from single building might be reported).
+			1.	_(In future, might be advised to indicate direction to some 'primary' points rather than merely nearest.  Or calculate centroid for `Way`s `Location`s to determine center rather than point.)_
+		1.	Wrap the discovered items in `POI` class to ease relative work.
 
 ## Current code overview
 

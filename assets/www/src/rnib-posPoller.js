@@ -18,7 +18,7 @@
 		this.onPosUpdateCallback = null;
 		this.autoRecordLast = true;
 		this.pendingRecordReported = null;
-		this.minReportPeriod = 10000; // TODO: Un-caps
+		this.minReportPeriod = 10000;
 		this.minReportDistance = 0.05;
 	}
 
@@ -52,6 +52,7 @@
 			var distance = GeoCodeCalc.CalcDistance(this.prevLat, this.prevLon, lat, lon, GeoCodeCalc.EarthRadiusInMiles);
 			log.log("distance: " + distance);
 			if(distance >= this.minReportDistance) {
+				log.debug("gotGps: farAndLongEnough = true");
 				return true;
 			} else {
 				log.info("not moved far enough");

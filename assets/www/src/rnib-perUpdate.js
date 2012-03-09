@@ -1,4 +1,4 @@
-;(function(exports, $, posPollerModule, tts, log) {
+;(function(exports, $, posPollerModule, tts, geo, log) {
 	var module = {};
 
 	var MIN_REPORT_PERIOD = 10000,
@@ -13,23 +13,23 @@
 		alert("speech failed: " + ret);
 	}
 
-	function PerUpdate() {
+	function PerUpdate(locationProvider) {
+		// var that = this;
+		this.locationProvider = locationProvider;
 		this.posPoller = null;
 	}
 
 	PerUpdate.method('retrieveAndReportLocation', function(p, updater) {
-		var lat = p.coords.latitude;
-		var lon = p.coords.longitude;
-		// TODO: recordPending() + get handle from getJSON() call below
-		try {
-			var here = rnib.mapData.getNodeNearestLatLon(lat, lon);
-			log.log("location: " + here);
-			var aName = here.aName;
+		var coords = new geo.GeoCoord(p.coords.latitude, p.coords.longitude);
+		log.debug("retrieving " + coords);
+		this.locationProvider.findPlaceNear(coords, function(l){
+			log.log("location: " + l);
+			var aName = l.aName;
 			tts.speak(aName, ttsSuccess, ttsFailed);
-		} catch (err) {
+			updater.recordReported(p, new Date()); // if recording last update manually
+		}, function(err){
 			log.error("failed to get location: " + err);
-		}
-		updater.recordReported(p, new Date()); // if recording last update manually
+		});
 	});
 
 	PerUpdate.method('startReporting', function() {
@@ -52,4 +52,4 @@
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.perUpdate = module;
-})(this, jQuery, rnib.posPoller, rnib.tts, rnib.log);
+})(this, jQuery, rnib.posPoller, rnib.tts, rnib.geo, rnib.log);
