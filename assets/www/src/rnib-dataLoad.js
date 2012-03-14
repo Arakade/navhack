@@ -1,6 +1,7 @@
 (function(exports, $, location, geo, log) {
 
 	var module = {};
+	var SEARCH_RADIUS_KM = 0.03; // TODO: Tune SEARCH_RADIUS_KM.  Later make it user-configurable.
 
 	/**
 	 * @constructor
@@ -75,6 +76,51 @@
 			}
 			log.debug("getFromNearestLatLon(list, " + targetCoords + ") searched " + numberOfNodes + " elements, taking " + i + " steps to find one " + d + " away: " + closestElement);
 			return closestElement;
+		}
+
+		/**
+		 * Find all list members (e.g. places) within radius of targetCoords.
+		 * @param {Array} list List of elements to work from.
+		 * @param {geo.GeoCoord} targetCoords Where to search for.
+		 * @param {Number} radius Radius to search for items within.
+		 * @type location.Location[]
+		 * @throws Error if targetCoords outside bounds of the map this MapSegment knows about.
+		 */
+		function getAllFromWithinRadius(list, targetCoords, radius) {
+			log.debug("searching within " + radius + " for " + targetCoords);
+
+			if (!bounds.contains(targetCoords)) {
+				// TODO: If lat,lon are outside current bounds, load new data and redo.
+				throw new Error("outside loaded bounds! " + targetCoords + " outside " + bounds);
+			}
+
+			var results = [];
+			for (var id in list) {
+				if (list.hasOwnProperty(id)) {
+					var n = list[id];
+					var ds = n.coordinates.distanceTo(targetCoords);
+					if (ds <= radius) {
+						results.push(n); // FIXME: RK-Current: check whether Building or standalone-Location then record separately.
+					}
+				}
+			}
+			log.debug("getFromWithinRadius(list, " + targetCoords + ", " + radius + ") searched " + list.length + " elements and found " + results.length + " items.");
+			return results;
+		}
+
+		/**
+		 * Find list members (e.g. places) within radius of targetCoords.  Filters out duplicates and gives only nearest point on Way.
+		 * @param {Array} list List of elements to work from.
+		 * @param {geo.GeoCoord} targetCoords Where to search for.
+		 * @param {Number} radius Radius to search for items within.
+		 * @type location.Location[]
+		 * @throws Error if targetCoords outside bounds of the map this MapSegment knows about.
+		 */
+		// TODO: Consider background thread to do this? (computationally expensive until spatial data-structure used)
+		function getFromWithinRadius(list, targetCoords, radius) {
+			var resultsWithDups = getAllFromWithinRadius(list, targetCoords, radius);
+			// FIXME: RK-Next: (1) Set aside standalone-Locations, (2) delete standalones, (3) find closest Location for each Building.
+			return resultsWithDups;
 		}
 
 		//
@@ -306,7 +352,16 @@
 		};
 
 		this.findPlaceNear = function(targetCoords) {
-			return getFromNearestLatLon(places, targetCoords);
+			log.debug("findPlaceNear: targetCoords:" + targetCoords);
+			var retVal = getFromNearestLatLon(places, targetCoords);
+			log.debug("findPlaceNear: found " + retVal);
+			if (!retVal.hasPOIs()) {
+				log.debug("findPlaceNear: no POIs, populating...");
+				var nearby = getFromWithinRadius(places, targetCoords, SEARCH_RADIUS_KM);
+				retVal.addLocationsAsPOIs(nearby);
+				log.debug("findPlaceNear: populated " + nearby.length + " POIs.  Returning.");
+			}
+			return retVal;
 		};
 
 	}

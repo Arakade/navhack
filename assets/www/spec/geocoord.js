@@ -25,6 +25,6 @@ describe("Degrees to clock", function() {
 	var bearing = 90;
 
 	it("should convert bearings to clock directions", function() {
-		expect(rnib.GeoCodeCalc.toClock(bearing)).toBe("3 o clock");
+		expect(rnib.GeoCodeCalc.toClock(bearing)).toBe("3 o'clock");
 	});
 });

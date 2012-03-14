@@ -1,4 +1,4 @@
-(function(exports, $, geo, log) {
+(function(exports, $, geo, GeoCodeCalc, log) {
 
 	var module = {};
 	var DEBUG = true;
@@ -22,6 +22,7 @@
 		var _ways = [];
 		var namedWay = null;
 		var coordData = null;
+		var pois = null;
 
 		this.__defineGetter__("coordinates", function() {
 			if (!coordData) {
@@ -45,9 +46,16 @@
 			return _ways;
 		});
 
+		this.hasPOIs = function() {
+			return (null === this.pois);
+		};
+
 		// To use from logging.  MUST NOT call anything that logs!
 		function internalToString(extraString) {
-			return "Location(id:" + that.id + ", coordinates:" + that.coordinates + extraString + ")";
+			var POIsString = " (" +
+				(that.hasPOIs() ? this.pois.length : "no") +
+				" POIs) ";
+			return "Location(id:" + that.id + ", coordinates:" + that.coordinates + POIsString + extraString + ")";
 		}
 
 		function findANamedWay() {
@@ -88,6 +96,57 @@
 			}
 		});
 
+		/**
+		 * @constructor
+		 */
+		function POI(location) {
+			this.location = location;
+
+			/**
+			 * Get range from containing Location.
+			 * @type Number
+			 */
+			this.__defineGetter__("range", function() {
+				var kilometers = that.coordinates.distanceTo(location.coordinates);
+				return kilometers;
+			});
+
+			/**
+			 * Get bearing in degrees from containing Location.
+			 * @type Number
+			 */
+			this.__defineGetter__("bearing", function() {
+				var retVal = that.coordinates.bearingTo(location.coordinates);
+				return retVal;
+			});
+
+			/**
+			 * Get bearing on clock face from containing Location (as an hour number).
+			 * @type Number
+			 */
+			this.__defineGetter__("clockPoint", function() {
+				var bearingDegrees = that.coordinates.bearingTo(location.coordinates);
+				var bearingClock = GeoCodeCalc.toClock(bearingDegrees);
+				return bearingClock;
+			});
+
+		}
+
+		this.addLocationsAsPOIs = function(locationPOIs) {
+			var newPOIs = [];
+			for (var i = locationPOIs.length - 1; i >= 0; i--) {
+				var l = locationPOIs[i];
+				if (this !== l) {
+					newPOIs.push(new POI(l));
+				}
+			}
+			this.pois = newPOIs;
+		};
+
+		this.__defineGetter__("POIs", function() {
+			return this.pois;
+		});
+
 		this.toString = function() {
 			return internalToString(", name:" + that.aName);
 		};
@@ -125,4 +184,4 @@
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.location = module;
-})(this, jQuery, rnib.geo, rnib.log);
+})(this, jQuery, rnib.geo, rnib.GeoCodeCalc, rnib.log);

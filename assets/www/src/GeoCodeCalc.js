@@ -36,8 +36,10 @@
 
 	module.toClock = function(degrees) {
 		var clockNumber = Math.floor(degrees / 30);
-
-		return clockNumber + " o clock";
+		if (0 === clockNumber) {
+			clockNumber = 12;
+		}
+		return clockNumber + " o'clock";
 	};
 
 	exports.rnib = exports.rnib || {};

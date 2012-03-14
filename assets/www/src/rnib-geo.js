@@ -30,6 +30,9 @@
 			return bearing;
 		};
 
+		/**
+		 * Return distance to other GeoCoord in km (kilometers).
+		 */
 		this.distanceTo = function(other) {
 			var earthRadius = 6371; // km
 

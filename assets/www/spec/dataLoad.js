@@ -152,6 +152,42 @@ describe("dataLoad", function () {
 					expect(w1.name).toEqual("Clerkenwell and Bunhill Wards Police Station");
 				});
 			});
+
+			describe("should have POIs", function() {
+				it("that are not null", function() {
+					var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+					findAndTest(coords, function(n1) {
+						var pois = n1.POIs;
+						expect(pois).not.toBeNull();
+					});
+				});
+
+				it("numbering 6", function() {
+					var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+					findAndTest(coords, function(n1) {
+						var pois = n1.POIs;
+						expect(pois.length).toBe(6);
+					});
+				});
+
+				describe("with the 1st", function() {
+					it("having correct numeric bearing", function() {
+						var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+						findAndTest(coords, function(n1) {
+							var poi = n1.POIs[0];
+							expect(poi.bearing).toBe(241.81979242070315);
+						});
+					});
+
+					it("having correct clock face bearing", function() {
+						var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+						findAndTest(coords, function(n1) {
+							var poi = n1.POIs[0];
+							expect(poi.clockPoint).toBe("8 o'clock");
+						});
+					});
+				});
+			});
 		});
 
 		describe("annoying values", function() {

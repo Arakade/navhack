@@ -164,7 +164,7 @@ First follows a description of the algorithm to do this categorizing:
 				*	If usefully named, add all `Location`s --> `places`
 		*	Others TODO:
 			*	All items from **[OSM's Category:Visual_Impairment](http://wiki.openstreetmap.org/wiki/Category:Visual_Impairment)** !
-			*	Interesting items from
+			*	Interesting items from rest of OSM's list.
 
 So algorithm breaks into 2 parts: (1) data-load and (2) on lat+lon request:
 
@@ -177,11 +177,18 @@ So algorithm breaks into 2 parts: (1) data-load and (2) on lat+lon request:
 		1.	_? Check whether `Location` is a member of a `Way` as a building / road ?_
 	1.	Find points of interest:
 		1.	Search `places` for being within search radius
-		1.	For those found, `Location` will appropriately proxy information from the `Way`.
-		1.	De-dup discovered `Location`s:
-			1.	by closest proximity (multiple `Location`s from single building might be reported).
-			1.	_(In future, might be advised to indicate direction to some 'primary' points rather than merely nearest.  Or calculate centroid for `Way`s `Location`s to determine center rather than point.)_
 		1.	Wrap the discovered items in `POI` class to ease relative work.
+		1.	For those found, `Location` will appropriately proxy information from the `Way`. (TODO - somewhat done)
+		1.	De-dup results:
+			*	Two types of problem:
+				1.	N `Location`s from 1 `Way` (e.g. multiple `Location`s from single building might be reported).
+					_(In future, might be advised to indicate direction to some 'primary' points rather than merely nearest.  Or calculate centroid for `Way`s `Location`s to determine center rather than point.)_
+				1.	M `Way`s from 1 `Location` (e.g. a node from the XML (hence a `Location`) might be used multiple times ((a) it's a place in its own right, (b) it's the corner of a building and (c) it's a point on a road)).
+			*	Thoughts about solving:
+				*	When (2) happens, need to represent all answers (of types of interest) to user.  Code must either be in/near speaking code or answers need wrapping.  Since we're using POIs for these anyway, best to encapsulate in POI.
+				*	De-duping suggests a `Location`'s POIs change depending upon GPS results.
+				*	Relative positions should be relative to GPS, not relative to the found location.
+				*	Given all this, best to switch returned results vehicle from `Location` to specific 'results' class. **TODO NEXT**
 
 ## Current code overview
 
