@@ -1,4 +1,4 @@
-(function(exports, $, location, geo, log) {
+;(function(exports, $, LocationModule, WayModule, PlaceModule, POIModule, FindResultsModule, geo, log) {
 
 	var module = {};
 	var SEARCH_RADIUS_KM = 0.03; // TODO: Tune SEARCH_RADIUS_KM.  Later make it user-configurable.
@@ -32,23 +32,26 @@
 		/** @type Bounds */
 		var bounds = null;
 		var numberOfNodes = 0;
-		var locationById = {};
+		var locationById = {}; // TODO: Move locationById from MapSegment to MapSegment.Builder and remove getLocationById() (or rework for test use)
 
-		/** @type location.Location[] */
-		var places = [];
+		/** @type PlaceModule.Place[] */
+		var placesToBeNear = []; // TODO: Resolve locationsOnRoads and placesToBeNear (do we need both?)
 
-		/** @type location.Location[] */
+		/** @type PlaceModule.Place[] */
+		var poiPlaces = [];
+
+		/** @type LocationModule.Location[] */
 		var locationsOnRoads = [];
 
-		/** @type location.Way */
+		// /** @type WayModule.Way[] */
 		var highways = [];
 
 		/**
 		 * Get the Location nearest supplied latitude & longitude from the supplied list.
 		 * API allows for null if no element near but present implementation always returns an instance.
-		 * @param {Array} list List of elements to work from.
+		 * @param {PlaceModule.Place[]} list List of elements to work from.
 		 * @param {geo.GeoCoord} targetCoords Where to search for.
-		 * @type location.Location
+		 * @type LocationModule.Location
 		 * @throws Error if targetCoords outside bounds of the map this MapSegment knows about.
 		 */
 		// TODO: Consider background thread to do this? (computationally expensive until spatial data-structure used)
@@ -61,29 +64,28 @@
 			}
 
 			var d = 9999999999999;
-			var i = 0;
-			var closestElement = null;
-			for (var id in list) {
-				if (list.hasOwnProperty(id)) {
-					var n = list[id];
-					var ds = n.coordinates.distanceTo(targetCoords);
-					if (ds < d) {
-						d = ds;
-						closestElement = n;
-						i++;
-					}
+			var steps = 0;
+			/** @type POI */
+			var closestResult = null;
+			for (var i = list.length - 1; i >= 0; i--) {
+				var p = list[i];
+				var poi = p.getPOIIfClose(targetCoords, d);
+				if (poi) { // p is closer than d
+					d = poi.range;
+					closestResult = poi;
+					steps++;
 				}
 			}
-			log.debug("getFromNearestLatLon(list, " + targetCoords + ") searched " + numberOfNodes + " elements, taking " + i + " steps to find one " + d + " away: " + closestElement);
-			return closestElement;
+			log.debug("getFromNearestLatLon(list, " + targetCoords + ") searched " + numberOfNodes + " elements, taking " + steps + " steps to find one " + d + " away: " + closestResult);
+			return closestResult;
 		}
 
 		/**
-		 * Find all list members (e.g. places) within radius of targetCoords.
-		 * @param {Array} list List of elements to work from.
+		 * Get POI for all list members (e.g. placesToBeNear) within radius of targetCoords.
+		 * @param {PlaceModule.Place[]} list List of elements to work from.
 		 * @param {geo.GeoCoord} targetCoords Where to search for.
 		 * @param {Number} radius Radius to search for items within.
-		 * @type location.Location[]
+		 * @type POIModule.POI[]
 		 * @throws Error if targetCoords outside bounds of the map this MapSegment knows about.
 		 */
 		function getAllFromWithinRadius(list, targetCoords, radius) {
@@ -94,33 +96,17 @@
 				throw new Error("outside loaded bounds! " + targetCoords + " outside " + bounds);
 			}
 
+			/** @type POIModule.POI[] */
 			var results = [];
-			for (var id in list) {
-				if (list.hasOwnProperty(id)) {
-					var n = list[id];
-					var ds = n.coordinates.distanceTo(targetCoords);
-					if (ds <= radius) {
-						results.push(n); // FIXME: RK-Current: check whether Building or standalone-Location then record separately.
-					}
+			for (var i = list.length - 1; i >= 0; i--) {
+				var n = list[i];
+				var poi = n.getPOIIfClose(targetCoords, radius);
+				if (poi) {
+					results.push(poi);
 				}
 			}
-			log.debug("getFromWithinRadius(list, " + targetCoords + ", " + radius + ") searched " + list.length + " elements and found " + results.length + " items.");
+			log.debug("getAllFromWithinRadius(list, " + targetCoords + ", " + radius + ") searched " + list.length + " elements and found " + results.length + " items.");
 			return results;
-		}
-
-		/**
-		 * Find list members (e.g. places) within radius of targetCoords.  Filters out duplicates and gives only nearest point on Way.
-		 * @param {Array} list List of elements to work from.
-		 * @param {geo.GeoCoord} targetCoords Where to search for.
-		 * @param {Number} radius Radius to search for items within.
-		 * @type location.Location[]
-		 * @throws Error if targetCoords outside bounds of the map this MapSegment knows about.
-		 */
-		// TODO: Consider background thread to do this? (computationally expensive until spatial data-structure used)
-		function getFromWithinRadius(list, targetCoords, radius) {
-			var resultsWithDups = getAllFromWithinRadius(list, targetCoords, radius);
-			// FIXME: RK-Next: (1) Set aside standalone-Locations, (2) delete standalones, (3) find closest Location for each Building.
-			return resultsWithDups;
 		}
 
 		//
@@ -171,12 +157,14 @@
 			}
 
 			// N.b. This can be called with Ways and Relations (not just Locations)!
+			/** @type Function[] */
 			var classifiersGeneral = [];
 
 			// N.b. locations DO NOT have ways at this point!
+			/** @type Function[] */
 			var classifiersLocationsOnly = [
 				function roadLike(l, c) {
-					if (c.highway) {
+					if (c.highway && c.highway != 'traffic_signals') {
 						locationsOnRoads.push(l); // FIXME: Needs de-duping here or Way's version.
 					}
 				},
@@ -185,42 +173,33 @@
 						return; // highway points go in locationsOnRoads
 					}
 
-					var isPlace = false;
-					if (l.ownName) {
-						isPlace = true;
-					}
-
-					if (isPlace) {
-						places.push(l);
+					if (l.ownName || l.hasAddress()) {
+						placesToBeNear.push(l);
+						poiPlaces.push(l);
 					}
 				}
 			];
 
+			/** @type Function[] */
 			var classifiersWaysOnly = [
 				function roadLike(w, c) {
 					if (c.highway) {
 						// Record as highway
 						highways.push(w);
-						// Add all way's Locations to places.
-						appendAllTo(w.locations, locationsOnRoads);
+						// TODO: Are highways also placesToBeNear?
 					}
 				},
 				function placeLike(w, c) {
 					// should have already filtered-out unnamed ways
-					var isPlace = false;
-					if ('yes' == c.building) {
-						isPlace = true;
-					}
-
-					if (isPlace) {
-						// Add all way's Locations to places.
-						appendAllTo(w.locations, places);
+					if ('yes' == c.building || w.hasAddress()) {
+						poiPlaces.push(w);
+						placesToBeNear.push(w);
 					}
 				}
 			];
 
 			/**
-			 * @param {location.Location|location.Way|location.Relation} locationWayOrRelation To classify.
+			 * @param {LocationModule.Location|WayModule.Way|RelationModule.Relation} locationWayOrRelation To classify.
 			 */
 			function classifyLocationWayOrRelation(locationWayOrRelation) {
 				var c = locationWayOrRelation.attributes;
@@ -232,13 +211,13 @@
 					classifiersGeneral[i](locationWayOrRelation, c);
 				}
 				// node-only
-				if (locationWayOrRelation instanceof location.Location) {
+				if (locationWayOrRelation instanceof LocationModule.Location) {
 					num = classifiersLocationsOnly.length;
 					for (i = 0; i < num; i++) {
 						classifiersLocationsOnly[i](locationWayOrRelation, c);
 					}
 				// way-only
-				} else if (locationWayOrRelation instanceof location.Way) {
+				} else if (locationWayOrRelation instanceof WayModule.Way) {
 					num = classifiersWaysOnly.length;
 					for (i = 0; i < num; i++) {
 						classifiersWaysOnly[i](locationWayOrRelation, c);
@@ -252,7 +231,7 @@
 					return false;
 				}
 
-				var newLoc = new location.Location(nodeSrc, attributes);
+				var newLoc = new LocationModule.Location(nodeSrc, attributes);
 				locationById[newLoc.id] = newLoc;
 				classifyLocationWayOrRelation(newLoc);
 				return true;
@@ -273,7 +252,7 @@
 					return false;
 				}
 
-				var w = new location.Way(waySrc, attributes);
+				var w = new WayModule.Way(waySrc, attributes);
 
 				$(waySrc).find("nd").each(function(j, nodeSrc) {
 					// add all the way's nodes
@@ -351,17 +330,20 @@
 			return locationById[id];
 		};
 
-		this.findPlaceNear = function(targetCoords) {
-			log.debug("findPlaceNear: targetCoords:" + targetCoords);
-			var retVal = getFromNearestLatLon(places, targetCoords);
-			log.debug("findPlaceNear: found " + retVal);
-			if (!retVal.hasPOIs()) {
-				log.debug("findPlaceNear: no POIs, populating...");
-				var nearby = getFromWithinRadius(places, targetCoords, SEARCH_RADIUS_KM);
-				retVal.addLocationsAsPOIs(nearby);
-				log.debug("findPlaceNear: populated " + nearby.length + " POIs.  Returning.");
-			}
-			return retVal;
+		/**
+		 * Find FindResults (including nearest Location and POIs) near targetCoords.
+		 * @param {geo.GeoCoords} targetCoords Coords to search near.
+		 * @type FindResultsModule.FindResults
+		 */
+		this.findNear = function(targetCoords) {
+			log.debug("findNear: targetCoords:" + targetCoords);
+			var closestPOI = getFromNearestLatLon(placesToBeNear, targetCoords);
+			log.debug("findNear: found " + closestPOI);
+			log.debug("findNear: finding POIs");
+			var nearby = getAllFromWithinRadius(poiPlaces, targetCoords, SEARCH_RADIUS_KM);
+			var results = new FindResultsModule.FindResults(closestPOI, nearby);
+			log.debug("findNear: Returning " + results);
+			return results;
 		};
 
 	}
@@ -372,8 +354,8 @@
 		/** @type MapSegment */
 		var mapSegment;
 
-		function onLoadedFindPlaceNear(targetCoords, onResult, onError) {
-			var l = mapSegment.findPlaceNear(targetCoords);
+		function onLoadedFindNear(targetCoords, onResult, onError) {
+			var l = mapSegment.findNear(targetCoords);
 			onResult(l);
 		}
 
@@ -390,24 +372,25 @@
 		/**
 		 * Get a Location by node ID or null if ID unknown.
 		 * DEVELOPMENT-TIME only.
-		 * @type location.Location
+		 * @type LocationModule.Location
 		 */
 		this.getLocationById = function(id) {
 			return mapSegment.getLocationById(id);
 		};
 
 		/**
-		 * Find the Location within bounds nearest to the supplied coordinates.
+		 * Find FindResults nearest to the supplied coordinates and call callback with answer.
+		 * Primary API entry-point.
 		 * @param {geo.GeoCoord} targetCoords Where to look near.
-		 * @param {Function(location.Location)} onResult Callback to receive answer.  Async because may need to load data from cache/server.
+		 * @param {Function(FindResultsModule.FindResults)} onResult Callback to receive answer.  Async because may need to load data from cache/server.
 		 * @param {Function(err)} onError Callback to receive error.  Likely when offline and data not cached.
 		 */
-		this.findPlaceNear = function(targetCoords, onResult, onError) {
+		this.findNear = function(targetCoords, onResult, onError) {
 			if (!mapSegment) {
-				log.debug("findPlaceNear: no mapSegment -- loading");
+				log.debug("findNear: no mapSegment -- loading");
 				loadSegmentFor(targetCoords,
 					function(){
-						onLoadedFindPlaceNear(targetCoords, onResult, onError);
+						onLoadedFindNear(targetCoords, onResult, onError);
 					},
 					function(err){
 						onError(err);
@@ -415,9 +398,9 @@
 				);
 			} else {
 				try {
-					onLoadedFindPlaceNear(targetCoords, onResult, onError);
+					onLoadedFindNear(targetCoords, onResult, onError);
 				} catch (err) {
-					log.error("findPlaceNear: error: " + err);
+					log.error("findNear: error: " + err);
 					alert("Error finding place:\n" + err);
 				}
 			}
@@ -434,5 +417,5 @@
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.mapData = module;
-})(this, jQuery, rnib.location, rnib.geo, rnib.log);
+})(this, jQuery, rnib.location.LocationModule, rnib.location.WayModule, rnib.location.PlaceModule, rnib.location.POIModule, rnib.location.FindResultsModule, rnib.geo, rnib.log);
 

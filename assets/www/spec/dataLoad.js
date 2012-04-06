@@ -1,5 +1,7 @@
 describe("dataLoad", function () {
 	var mapDataModule = rnib.mapData;
+	var LocationModule = rnib.location.LocationModule;
+	var FindResultsModule = rnib.location.FindResultsModule;
 	var geo = rnib.geo;
 
 	describe("loading data", function () {
@@ -16,17 +18,19 @@ describe("dataLoad", function () {
 			console.error("loadSegmentFor(): error:" + err);
 		});
 
-		waitsFor(function() {
-			console.log("dataLoad test is polling for readiness");
-			return callbackCalled;
-		}, "Loading data timed-out.", 2000);
+		function whenLoadedIt(description, spec) {
+			it(description, function() {
+				waitsFor(function() {return callbackCalled;}, "timed-out.", 2000);
+				runs(spec);
+			});
+		}
 
 		describe("should", function() {
-			it("have non-null loaded data", function () {
+			whenLoadedIt("have non-null loaded data", function () {
 				expect(mapResult).not.toBeNull();
 			});
 
-			it("not find an absent node ID", function () {
+			whenLoadedIt("not find an absent node ID", function () {
 				var n1 = provider.getLocationById("99999");
 				expect(n1).toBeUndefined();
 			});
@@ -34,26 +38,26 @@ describe("dataLoad", function () {
 
 		describe("for a *specific* contained node ID", function () {
 			describe("should", function() {
-				it("not be null", function () {
+				whenLoadedIt("not be null", function () {
 					var n1 = provider.getLocationById("108417");
 					expect(n1).not.toBeNull();
 				});
 
-				it("be a Location", function () {
+				whenLoadedIt("be a Location", function () {
 					var n1 = provider.getLocationById("108417");
-					expect(n1 instanceof rnib.location.Location).toBeTruthy();
+					expect(n1 instanceof LocationModule.Location).toBeTruthy();
 				});
 			});
 
 			describe("should have coordinates", function () {
-				it("that are not null", function () {
+				whenLoadedIt("that are not null", function () {
 					var n1 = provider.getLocationById("108417");
 					var n1Coords = n1.coordinates;
 					expect(n1Coords).not.toBeNull();
 					console.log("n1Coords: "+ n1Coords);
 				});
 
-				it("that are correct", function () {
+				whenLoadedIt("that are correct", function () {
 					var n1 = provider.getLocationById("108417");
 					var n1Coords = n1.coordinates;
 					var expectedLat = 51.523314;
@@ -65,50 +69,50 @@ describe("dataLoad", function () {
 			});
 
 			describe("should have ways", function() {
-				it("that are not null", function () {
+				whenLoadedIt("that are not null", function () {
 					var n1 = provider.getLocationById("108417");
 					var n1Ways = n1.ways;
 					expect(n1Ways).not.toBeNull();
 					console.log("n1Ways: "+ n1Ways);
 				});
 
-				it("that have the correct name", function () {
+				whenLoadedIt("that have the correct name", function () {
 					var n1 = provider.getLocationById("108417");
 					var n1Ways = n1.ways;
 					var w1 = n1Ways[0];
-					expect(w1.name).toEqual("Old Street");
+					expect(w1.theName).toEqual("Old Street");
 				});
 
-				it("that disallow assignment (silently ignoring attempt to use undefined setter)", function () {
+				whenLoadedIt("that disallow assignment (silently ignoring attempt to use undefined setter)", function () {
 					var n1 = provider.getLocationById("108417");
 					n1.ways = ['not', 'allowed']; // silently fails
 					var n1Ways = n1.ways;
 					var w1 = n1Ways[0];
-					expect(w1.name).toEqual("Old Street");
+					expect(w1.theName).toEqual("Old Street");
 				});
 			});
 
 			describe("should have", function() {
-				it("a named way", function() {
+				whenLoadedIt("a named way", function() {
 					var n1 = provider.getLocationById("108417");
 					var w1 = n1.aNamedWay;
-					expect(w1.name).toEqual("Old Street");
+					expect(w1.theName).toEqual("Old Street");
 				});
 
-				it("a name (itself)", function() {
+				whenLoadedIt("a name (itself)", function() {
 					var n1 = provider.getLocationById("108417");
 					var aName = n1.aName;
 					expect(aName).toEqual("Old Street");
 				});
 
 				describe("its own name", function() {
-					it("on those that have it", function() {
+					whenLoadedIt("on those that have it", function() {
 						var n1 = provider.getLocationById("292162858");
 						var ownName = n1.ownName;
 						expect(ownName).toEqual("Pizza Express");
 					});
 
-					it("null on those that don't have it", function() {
+					whenLoadedIt("null on those that don't have it", function() {
 						var n1 = provider.getLocationById("108417");
 						var ownName = n1.ownName;
 						expect(ownName).toBeUndefined();
@@ -118,72 +122,132 @@ describe("dataLoad", function () {
 		});
 
 		function findAndTest(coords, assertions) {
-			var done = false;
-			provider.findPlaceNear(coords, function onSuccess(n1) {
-				assertions(n1);
-				done = true;
-			}, function(err) {
-				expect(err).toBe("NOT AN ERROR!"); // i.e. fail
+			waitsFor(function() {return callbackCalled;}, "timed-out.", 2000);
+			runs(function() {
+				var done = false;
+				provider.findNear(coords, function onSuccess(results) {
+					assertions(results);
+					done = true;
+				}, function(err) {
+					expect(err).toBe("NOT AN ERROR!"); // i.e. fail
+				});
+				expect(done).toBeTruthy(); // synchronous callback expected since we pre-loaded the data.
 			});
-			expect(done).toBeTruthy(); // synchronous callback expected since we pre-loaded the data.
 		}
 
 		describe("near a known location", function() {
+			it("should find non-null result", function () {
+				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+				findAndTest(coords, function(results) {
+					expect(results).not.toBeNull();
+				});
+			});
+
+			it("should give FindResult", function () {
+				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+				findAndTest(coords, function(results) {
+					expect(results instanceof FindResultsModule.FindResults).toBeTruthy();
+				});
+			});
+
+			it("should have non-null closestPOI", function () {
+				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+				findAndTest(coords, function(results) {
+					expect(results.closestPOI).not.toBeNull();
+				});
+			});
+
+			it("should have non-null closestLocation", function () {
+				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+				findAndTest(coords, function(results) {
+					expect(results.closestPOI.closestLocation).not.toBeNull();
+				});
+			});
+
 			it("should find non-null node", function () {
 				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-				findAndTest(coords, function(n1) {
+				findAndTest(coords, function(results) {
+					var n1 = results.closestPOI.closestLocation;
 					expect(n1).not.toBeNull();
 				});
 			});
 
 			it("should have some ways", function () {
 				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-				findAndTest(coords, function(n1) {
+				findAndTest(coords, function(results) {
+					var n1 = results.closestPOI.closestLocation;
 					var n1Ways = n1.ways;
 					expect(n1Ways).not.toBeNull();
 				});
 			});
 
+			it("should have correct number of ways", function () {
+				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+				findAndTest(coords, function(results) {
+					var n1 = results.closestPOI.closestLocation;
+					var n1Ways = n1.ways;
+					expect(n1Ways.length).toBe(1);
+				});
+			});
+
 			it("should find the correct way", function () {
 				var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-				findAndTest(coords, function(n1) {
+				findAndTest(coords, function(results) {
+					var n1 = results.closestPOI.closestLocation;
 					var n1Ways = n1.ways;
 					var w1 = n1Ways[0];
-					expect(w1.name).toEqual("Clerkenwell and Bunhill Wards Police Station");
+					expect(w1.theName).toEqual("Clerkenwell and Bunhill Wards Police Station");
 				});
 			});
 
 			describe("should have POIs", function() {
 				it("that are not null", function() {
 					var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-					findAndTest(coords, function(n1) {
-						var pois = n1.POIs;
+					findAndTest(coords, function(results) {
+						var pois = results.POIs;
 						expect(pois).not.toBeNull();
 					});
 				});
 
-				it("numbering 6", function() {
+				it("numbering 1 (2 minus removal of closestPlace)", function() {
 					var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-					findAndTest(coords, function(n1) {
-						var pois = n1.POIs;
-						expect(pois.length).toBe(6);
+					findAndTest(coords, function(results) {
+						var pois = results.POIs;
+						expect(pois.length).toBe(1);
+					});
+				});
+
+				it("with correct names", function() {
+					var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+					findAndTest(coords, function(results) {
+						var pois = results.POIs;
+						// expect(pois[0].place.theName).toBe("Clerkenwell and Bunhill Wards Police Station"); // removed as closestPlace
+						expect(pois[0].place.theName).toBe("Saddlers Sports Centre");
 					});
 				});
 
 				describe("with the 1st", function() {
+					it("having correct name", function() {
+						var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
+						findAndTest(coords, function(results) {
+							var poi = results.POIs[0];
+							expect(poi.place.theName).toBe("Saddlers Sports Centre");
+						});
+					});
+
 					it("having correct numeric bearing", function() {
 						var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-						findAndTest(coords, function(n1) {
-							var poi = n1.POIs[0];
-							expect(poi.bearing).toBe(241.81979242070315);
+						findAndTest(coords, function(results) {
+							var poi = results.POIs[0];
+							expect(poi.bearing).toBe(313.7627854117492);
 						});
 					});
 
 					it("having correct clock face bearing", function() {
 						var coords = new geo.GeoCoord(51.52454555500299, -0.09877452626824379);
-						findAndTest(coords, function(n1) {
-							var poi = n1.POIs[0];
-							expect(poi.clockPoint).toBe("8 o'clock");
+						findAndTest(coords, function(results) {
+							var poi = results.POIs[0];
+							expect(poi.clockPoint).toBe("10 o'clock");
 						});
 					});
 				});
@@ -193,11 +257,12 @@ describe("dataLoad", function () {
 		describe("annoying values", function() {
 			it("should be fine", function() {
 				var coords = new geo.GeoCoord(51.523718333333335, -0.09894833333333333);
-				findAndTest(coords, function(n1) {
+				findAndTest(coords, function(results) {
+					var n1 = results.closestPOI.closestLocation;
 					expect(n1.aName).not.toBeNull();
 				});
 			});
 		});
-	});
 
+	});
 });

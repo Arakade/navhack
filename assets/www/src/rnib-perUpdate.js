@@ -1,4 +1,4 @@
-;(function(exports, $, posPollerModule, tts, geo, log) {
+;(function(exports, $, posPollerModule, MapDataModule, FindResultsModule, tts, geo, log) {
 	var module = {};
 
 	var MIN_REPORT_PERIOD = 10000,
@@ -19,26 +19,38 @@
 	}
 
 	/**
-	 * @param {rnib.geo.Location} l The found Location.
+	 * @param {FindResultsModule.FindResults} results The found results.
 	 */
-	function reportFindings(l) {
-		var aName = l.aName;
-		tts.speak(aName);
-		var allPOIs = l.POIs;
-		for (var i = allPOIs.length - 1; i >= 0; i--) {
-			var poi = allPOIs[i];
-			var msg = poi.location.aName + ", " + sanitizeDistance(poi.range) + " at " + poi.clockPoint ;
-			tts.speak(msg);
+	function reportFindings(results) {
+		var l = results.closestPOI.place;
+		log.debug("closestPOI: " + l);
+		var theName = l.theName;
+		tts.speak("At " + theName);
+		var allPOIs = results.POIs;
+		var numPOIs = allPOIs.length;
+		if (0 < numPOIs) {
+			tts.speak("Nearby, there are " + numPOIs + " P.O.I's");
+			for (var i = 0; i < numPOIs; i++) {
+				var poi = allPOIs[i];
+				var msg = "" + (1+i) + ". " + poi.place.theName + ", " + sanitizeDistance(poi.range) + " at " + poi.clockPoint;
+				tts.speak(msg);
+			}
+		} else {
+			tts.speak("Nearby, there are no P.O.I's");
 		}
 	}
 
+	/**
+	 * @param {GPSPos} p GPS position from periodic update.  Has coords.{latitude|longitude}.
+	 * @param {posPollerModule.PosPoller} updater PosPoller to record update completion against.
+	 */
 	PerUpdate.method('retrieveAndReportLocation', function(p, updater) {
 		var coords = new geo.GeoCoord(p.coords.latitude, p.coords.longitude);
 		log.debug("retrieving " + coords);
-		this.locationProvider.findPlaceNear(coords, function(l){
+		this.locationProvider.findNear(coords, function(results){
 			updater.recordReported(p, new Date()); // if recording last update manually
-			log.log("location: " + l);
-			reportFindings(l);
+			log.log("retrieveAndReportLocation: " + results);
+			reportFindings(results);
 		}, function(err){
 			log.error("failed to get location: " + err);
 		});
@@ -64,4 +76,4 @@
 
 	exports.rnib = exports.rnib || {};
 	exports.rnib.perUpdate = module;
-})(this, jQuery, rnib.posPoller, rnib.tts, rnib.geo, rnib.log);
+})(this, jQuery, rnib.posPoller, rnib.mapData, rnib.location.FindResultsModule, rnib.tts, rnib.geo, rnib.log);

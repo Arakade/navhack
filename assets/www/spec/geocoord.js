@@ -22,9 +22,26 @@ describe("Degrees to compass", function() {
 });
 
 describe("Degrees to clock", function() {
-	var bearing = 90;
-
-	it("should convert bearings to clock directions", function() {
-		expect(rnib.GeoCodeCalc.toClock(bearing)).toBe("3 o'clock");
+	it("should convert 90 degrees to 3 o'clock", function() {
+		expect(rnib.GeoCodeCalc.toClock(90)).toBe("3 o'clock");
 	});
+	it("should convert 180 degrees to 6 o'clock", function() {
+		expect(rnib.GeoCodeCalc.toClock(180)).toBe("6 o'clock");
+	});
+	it("should convert 270 degrees to 9 o'clock", function() {
+		expect(rnib.GeoCodeCalc.toClock(270)).toBe("9 o'clock");
+	});
+
+	describe("should convert to 12 o'clock", function() {
+		it("0 degrees", function() {
+			expect(rnib.GeoCodeCalc.toClock(0)).toBe("12 o'clock");
+		});
+		it("14 degrees", function() {
+			expect(rnib.GeoCodeCalc.toClock(14)).toBe("12 o'clock");
+		});
+		it("-14 (346) degrees", function() {
+			expect(rnib.GeoCodeCalc.toClock(346)).toBe("12 o'clock");
+		});
+	});
+
 });

@@ -35,7 +35,11 @@
 	};
 
 	module.toClock = function(degrees) {
-		var clockNumber = Math.floor(degrees / 30);
+		var correctedDegrees = degrees + 15;
+		if (correctedDegrees >= 360) {
+			correctedDegrees -= 360; // faster than modulo 360 above?
+		}
+		var clockNumber = Math.floor(correctedDegrees / 30);
 		if (0 === clockNumber) {
 			clockNumber = 12;
 		}

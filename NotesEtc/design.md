@@ -24,6 +24,8 @@
 1.	Walking down street, all POIs within defined radius of location every period of time.
 1.	Arrive at a junction and be told names and directions (by clock face) of exits.
 	(How to do compass if in pocket?  Last travel direction?  Require removal from pocket?)
+1.	Tap (from outside pocket) to pause and resume voice?
+	(accelerometer-based tap recognition when no screen touch detected)
 
 # Configuration choices
 

@@ -17,9 +17,10 @@ ________________________________
 	1.	DONE: Have updates prompted by change in sufficient time and distance.
 	1.	DONE: Get speech working consistently
 	1.	DONE: Get current location (road, street, etc) from pre-canned data
-	1.	Get relevant proximal POI from pre-canned data
-	1.	Add junction behaviour (detect junction and speak options).
+	1.	DONE: Get relevant proximal POI from pre-canned data
 	1.	Load data from server.
+	1.	Fix bearing to use direction of travel or compass (Currently bearing calculations are based on north facing!  See below.)
+	1.	Add junction behaviour (detect junction and speak options).
 	1.	Unify code (e.g. `GeoCoord`, `GoodNode`, `rnib-math.js`, `GeoCodeCalc.js`)
 	1.	Do a minimal amount of performance optimization?
 	1.	Present version to beta-testers
@@ -189,6 +190,33 @@ So algorithm breaks into 2 parts: (1) data-load and (2) on lat+lon request:
 				*	De-duping suggests a `Location`'s POIs change depending upon GPS results.
 				*	Relative positions should be relative to GPS, not relative to the found location.
 				*	Given all this, best to switch returned results vehicle from `Location` to specific 'results' class. **TODO NEXT**
+			*	So...
+				1.	Switch to returning `Result` class
+					*	`userCoords` -- to do relative positioning from
+					*	`nearestLocation` -- the actual `Location` previously returned.
+					*	`POIs` list, each consisting of a POI sub-class which...
+						*	abstracts type of contained data appropriately.  Contained types include:
+							*	`Location`s -- point places whose coords are their own coords.
+							*	buildings as `Way`s -- area places whose coords \[for direction\] are the closest `Location`, set during finding.  In future, possibly to be replaced with an 'entrance Location' (the most useful point or points on the building the user would wish to navigate to).
+
+NOTES:
+*	Perhaps `Place` should abstract `Location` or `Way` -- the prior being a single-coord and the latter being multi.
+*	`POIPlace` then asks `Place` to work out its closest coords relative to supplied coords.
+*	Should there then be 2 `Place` sub-classes for dealing?  Probably abstract beneath factory method.
+*	Should tests then validate that
+
+*	BETTER: What if `Way` and `Location` knew how to do proximity test and provide `POI` (indicating most proximal of their points).
+*	So, make `places` be a list of `Way`s and `Location`s that each have some test method that returns a `POI` (embodying their closest point) if within radius and null if not.
+*	Update `getAllFromWithinRadius()`'s search approach to use this.  Don't expect `spec/dataLoad.js` to pass until this because ...
+*	Types of thing:
+	1.	Places the user can be near (addressed points on road, named points, etc)
+	1.	POIs the user might want to know about
+*	This means 2 sets to search -- places & POIs.
+*	Atm, only have 1 -- places.
+*	All above is for finding POIs.  What about places? (and var needs renaming!)
+*	`placesToBeNear` doesn't need nearest point (`Location`) unless said `Location` carries some useful info.  Instead just need name for user.  As such, supplying `Place` is sufficient provided algorithm can use closest point in order to determine whether another `Place`'s point is closer.
+
+*	**TODO** Currently bearing calculations are based on north facing!  Needs to use either direction of travel or compass (configurable and detect based on screen unlockedness.)
 
 ## Current code overview
 
@@ -269,6 +297,12 @@ Concerns over sufficiency:
 
 Specifically undisplayed text.  Perhaps [from native code](http://arstechnica.com/apple/guides/2010/02/iphone-voiceservices-looking-under-the-hood.ars/)?
 
+### Spatial data-structures in JavaScript
+
+Potentials (more research pending):
+*	http://www.mikechambers.com/blog/2011/03/21/javascript-quadtree-implementation/
+	*	Forked by others with extra fixes.
+		See https://github.com/Jagged/ExamplesByMesh/blob/master/JavaScript/QuadTree/examples/scripts/retrieve_inbounds.js
 ________________________________
 
 # Server use discussion
